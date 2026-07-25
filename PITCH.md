@@ -10,11 +10,11 @@ When a railway switch fails at 6 AM, the maintenance operator doesn't have a dat
 
 **[0:40 — The solution]**
 
-Fault Capsule fixes the context, not the model. A deterministic compiler slices time around the alarm, links recent changes, pulls in neighbouring assets, and always keeps the safety rules — producing a compact, versioned **Incident Capsule**. A small Gemma 4 — just 2B parameters, running entirely on this laptop — then picks the next safe inspection from a whitelist, cites its evidence, or abstains. Network off. Zero outbound requests. Every decision auditable and replayable.
+Fault Capsule runs entirely on this laptop — a 4-gigabyte quantized Gemma 4, network off, zero outbound requests. Nothing leaves the site. But a 2B model handed raw site data is only right half the time, so we don't fix the model, we fix what it sees: a deterministic on-device compiler slices time around the alarm, links recent changes, pulls in neighbouring assets, and always keeps the safety rules — producing a compact, versioned **Incident Capsule**. Gemma then picks the next safe inspection from a whitelist, cites its evidence, or abstains. Every decision auditable and replayable, offline.
 
 **[1:10 — The proof]**
 
-We benchmarked it honestly: same model, same token budget, four context strategies. Classic BM25 retrieval: 45% correct next actions. Raw data dump: 50%. Our Capsule: **91%** — with zero unsafe actions and 100% valid citations. Context engineering literally doubled a small model's decision quality. And the same adapter runs on an NVIDIA L40S with vLLM: identical decisions, five times faster.
+We benchmarked it honestly: same model, same token budget, four context strategies. Classic BM25 retrieval: 45% correct next actions. Raw data dump: 50%. Our Capsule: **91%** — with zero unsafe actions and 100% valid citations. Same model, same 4.5 seconds, twice the decision quality: that's what makes a laptop-sized model good enough to trust in the field. And the same adapter serves that model from an on-prem NVIDIA L40S with vLLM — identical pipeline, 4.6 times faster.
 
 **[1:40 — The close]**
 
