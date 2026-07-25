@@ -489,6 +489,23 @@ button {
   border-radius: var(--radius);
   background: rgb(13 18 20 / 92%);
   box-shadow: var(--shadow);
+  transition: border-color 240ms ease-out, box-shadow 240ms ease-out;
+}
+
+.asset-viewport--analyzing,
+.asset-viewport--inspecting {
+  border-color: rgb(239 180 79 / 48%);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 24%), 0 0 36px rgb(239 180 79 / 8%);
+}
+
+.asset-viewport--decision-ready {
+  border-color: rgb(255 104 78 / 42%);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 24%), 0 0 34px rgb(255 104 78 / 8%);
+}
+
+.asset-viewport--resolved {
+  border-color: rgb(83 216 206 / 48%);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 24%), 0 0 38px rgb(83 216 206 / 10%);
 }
 
 .panel::before,
@@ -675,15 +692,94 @@ button {
   color: var(--text-secondary);
 }
 
+.twin-stage-chip {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  color: var(--text-muted);
+  background: rgb(7 10 12 / 70%);
+  letter-spacing: 0.08em;
+}
+
+.twin-stage-chip > i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.twin-stage-chip > span {
+  display: grid;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.twin-stage-chip small {
+  color: var(--text-muted);
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+}
+
+.twin-stage-chip--critical { color: var(--red); }
+.twin-stage-chip--warning { color: var(--amber); }
+.twin-stage-chip--safe { color: var(--cyan); }
+
 .viewport-canvas {
   position: relative;
   min-height: 420px;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.viewport-canvas::after {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border: 1px solid rgb(255 255 255 / 2%);
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 22%), transparent 24%, transparent 72%, rgb(0 0 0 / 18%)),
+    linear-gradient(0deg, rgb(0 0 0 / 24%), transparent 28%);
+  content: "";
+  pointer-events: none;
 }
 
 .viewport-canvas canvas {
   display: block;
   z-index: 2;
+}
+
+.twin-scan-volume {
+  position: absolute;
+  z-index: 4;
+  top: -30%;
+  right: 0;
+  left: 0;
+  height: 28%;
+  border-bottom: 1px solid rgb(239 180 79 / 65%);
+  background: linear-gradient(180deg, transparent, rgb(239 180 79 / 7%));
+  box-shadow: 0 14px 28px rgb(239 180 79 / 5%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.asset-viewport--analyzing .twin-scan-volume,
+.asset-viewport--inspecting .twin-scan-volume {
+  opacity: 1;
+  animation: twin-scan 1.55s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.asset-viewport--resolved .twin-scan-volume {
+  top: 0;
+  height: 100%;
+  border-bottom-color: transparent;
+  background: radial-gradient(circle at 58% 45%, rgb(83 216 206 / 8%), transparent 38%);
+  opacity: 1;
 }
 
 .twin-interaction-hint {
@@ -1050,16 +1146,39 @@ button {
   pointer-events: none;
 }
 
-.signal-wave {
+.signal-trace {
   position: absolute;
   z-index: 3;
   right: 13px;
-  bottom: 13px;
+  bottom: 8px;
   width: 38%;
   min-width: 180px;
-  height: 42px;
-  overflow: visible;
   pointer-events: none;
+}
+
+.signal-trace > span {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  color: var(--amber);
+  font-family: var(--font-data);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+}
+
+.signal-trace > span i {
+  width: 18px;
+  height: 1px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.signal-wave {
+  display: block;
+  width: 100%;
+  height: 34px;
+  overflow: visible;
 }
 
 .signal-grid {
@@ -1074,6 +1193,15 @@ button {
   stroke-width: 1.5;
   filter: drop-shadow(0 0 4px rgb(239 180 79 / 50%));
   vector-effect: non-scaling-stroke;
+}
+
+.asset-viewport--resolved .signal-trace > span {
+  color: var(--cyan);
+}
+
+.asset-viewport--resolved .signal-path {
+  stroke: var(--cyan);
+  filter: drop-shadow(0 0 4px rgb(83 216 206 / 50%));
 }
 
 .viewport-footer {
@@ -1866,6 +1994,13 @@ button {
   100% { transform: translateY(230px); opacity: 0; }
 }
 
+@keyframes twin-scan {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: 1; }
+  82% { opacity: 0.82; }
+  100% { transform: translateY(570px); opacity: 0; }
+}
+
 @keyframes reveal-item {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -2061,16 +2196,25 @@ button {
   }
 
   .asset-viewport {
-    min-height: 440px;
+    min-height: 500px;
   }
 
   .viewport-canvas {
-    min-height: 350px;
+    min-height: 410px;
   }
 
-  .viewport-topline > span,
   .reticle--motor,
-  .signal-wave {
+  .signal-trace {
+    display: none;
+  }
+
+  .twin-stage-chip {
+    min-height: 26px;
+    padding: 2px 6px;
+    font-size: 0.58rem;
+  }
+
+  .twin-stage-chip small {
     display: none;
   }
 
@@ -2117,8 +2261,42 @@ button {
     right: 10px;
     left: 10px;
     width: auto;
-    max-height: 242px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: hidden;
+    padding: 11px;
+  }
+
+  .part-inspector > p {
+    display: none;
+  }
+
+  .part-inspector dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 8px;
+  }
+
+  .part-inspector dl > div {
+    min-height: 36px;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 7px;
+    border-right: 1px solid var(--line);
+  }
+
+  .part-inspector dl > div:last-child {
+    border-right: 0;
+  }
+
+  .part-inspector dd {
+    text-align: left;
+  }
+
+  .part-inspection-action {
+    min-height: 40px;
+    margin-top: 8px;
   }
 
   .viewport-coordinate {
