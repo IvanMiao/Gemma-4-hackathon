@@ -268,6 +268,41 @@ summary:focus-visible,
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
+.header-nav {
+  position: relative;
+}
+
+.header-nav-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--shadow);
+}
+
+.header-nav-panel a {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.header-nav-panel a:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
 .network-toggle {
   position: relative;
   gap: 8px;

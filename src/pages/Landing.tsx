@@ -274,6 +274,11 @@ export default function Landing() {
                 How it works
               </Button>
             </Link>
+            <Link to="/simulator">
+              <Button variant="ghost" size="sm">
+                Live simulator
+              </Button>
+            </Link>
             <Link to="/observability">
               <Button variant="ghost" size="sm">
                 Observability

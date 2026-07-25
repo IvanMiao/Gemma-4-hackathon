@@ -83,6 +83,16 @@ export default function Journey() {
                 <ArrowLeft size={14} /> Home
               </Button>
             </Link>
+            <Link to="/simulator">
+              <Button variant="ghost" size="sm">
+                Live simulator
+              </Button>
+            </Link>
+            <Link to="/observability">
+              <Button variant="ghost" size="sm">
+                Observability
+              </Button>
+            </Link>
             <Link to="/dashboard">
               <Button size="sm">
                 Open console <ArrowRight size={14} />

@@ -13,7 +13,14 @@ from .compat import decision_to_ui, fixture_to_ui, inspection_to_ui, capsule_to_
 from .compiler import capsule_to_prompt, compile_incident
 from .inference import make_adapter
 from .network import GUARD
-from .schemas import InformationNeed, InspectionOutcome
+from .schemas import (
+    ActionSpec,
+    EvidenceRecord,
+    ExpectedOutcome,
+    IncidentFixture,
+    InformationNeed,
+    InspectionOutcome,
+)
 from .serpapi_plugin import SerpApiProvider, offline_bulletin_fixture
 from .simulator import load_fixtures, run_inspection
 from .strategies import CONTEXT_BUILDERS
@@ -34,6 +41,9 @@ serp_enabled = False  # user opt-in, independent from network mode
 ACTIVE_INCIDENT = "DEMO-207"  # 4-round metro crossover scenario (see PITCH.md journey)
 # per-incident inspections already performed (drives capsule recompilation)
 OBSERVATIONS: dict[str, list[InspectionOutcome]] = {}
+# operator-authored incidents created live from the simulator (id -> impact blurb)
+CUSTOM_IMPACT: dict[str, str] = {}
+CUSTOM_COUNTER = 0
 
 
 class NetworkReq(BaseModel):
@@ -77,7 +87,8 @@ def state():
             "last_query": serp.last_query,
         },
         "incidents": [
-            {"id": f.id, "title": f.title, "asset": f.asset} for f in FIXTURES.values()
+            {"id": f.id, "title": f.title, "asset": f.asset, "impact": CUSTOM_IMPACT.get(f.id, "")}
+            for f in FIXTURES.values()
         ],
     }
 
@@ -93,6 +104,83 @@ def set_plugin(req: PluginReq):
     global serp_enabled
     serp_enabled = req.enabled and GUARD.network_on
     return {"enabled": serp_enabled, "loaded": serp_enabled and serp.is_available()}
+
+
+# --- Operator-authored incidents (simulator "create your own accident") ---
+
+
+class CustomEvidenceReq(BaseModel):
+    kind: str = "telemetry"
+    summary: str
+    trust: str = "site"
+
+
+class CustomActionReq(BaseModel):
+    id: str
+    label: str
+    outcome_summary: str = ""
+    new_evidence_summary: str = ""
+
+
+class CustomIncidentReq(BaseModel):
+    title: str
+    asset: str
+    description: str
+    impact: str = ""
+    evidence: list[CustomEvidenceReq]
+    allowed_actions: list[CustomActionReq]
+    forbidden_actions: list[CustomActionReq] = []
+
+
+@app.post("/api/incidents/custom")
+def create_custom_incident(req: CustomIncidentReq):
+    global CUSTOM_COUNTER
+    CUSTOM_COUNTER += 1
+    incident_id = f"CUSTOM-{CUSTOM_COUNTER:03d}"
+
+    evidence = [
+        EvidenceRecord(id=f"E{i + 1}", kind=e.kind, summary=e.summary, source="operator", trust=e.trust)
+        for i, e in enumerate(req.evidence)
+    ]
+    allowed = [ActionSpec(id=a.id, label=a.label, kind="inspection") for a in req.allowed_actions]
+    allowed.append(ActionSpec(id="escalate_to_human", label="Stop and hand over to maintenance team", kind="escalate"))
+    forbidden = [ActionSpec(id=a.id, label=a.label, kind="inspection") for a in req.forbidden_actions]
+
+    inspections: dict[str, InspectionOutcome] = {}
+    next_id = len(evidence) + 1
+    for a in req.allowed_actions:
+        new_evidence = []
+        if a.new_evidence_summary:
+            new_evidence.append(
+                EvidenceRecord(id=f"E{next_id}", kind="inspection", summary=a.new_evidence_summary, source="field inspection", trust="site")
+            )
+            next_id += 1
+        inspections[a.id] = InspectionOutcome(
+            action_id=a.id,
+            summary=a.outcome_summary or "Inspection completed, no additional findings.",
+            new_evidence=new_evidence,
+        )
+
+    fixture = IncidentFixture(
+        id=incident_id,
+        title=req.title,
+        asset=req.asset,
+        reported="operator-authored, live",
+        description=req.description,
+        evidence=evidence,
+        allowed_actions=allowed,
+        forbidden_actions=forbidden,
+        inspections=inspections,
+        labels=ExpectedOutcome(
+            root_cause="operator-defined scenario",
+            expected_action_round1="escalate_to_human",
+            expected_action_round2="escalate_to_human",
+        ),
+    )
+    FIXTURES[incident_id] = fixture
+    CUSTOM_IMPACT[incident_id] = req.impact
+    OBSERVATIONS.pop(incident_id, None)
+    return {"id": incident_id}
 
 
 # --- React dashboard contract (src/types/domain.ts) ---
@@ -199,9 +287,13 @@ def run(req: RunReq):
             extra = offline_bulletin_fixture()
             web_provenance = {"q": "(recorded copy, plugin not loaded)", "fields_sent": [], "reason": "offline fallback"}
 
+    MAX_ROUNDS = 12  # live/unlimited in practice; a hard backstop against a runaway loop
     rounds = []
     observations: list[InspectionOutcome] = []
-    for round_num in (1, 2):
+    performed: set[str] = set()
+    round_num = 0
+    while round_num < MAX_ROUNDS:
+        round_num += 1
         capsule = compile_incident(
             fixture, observations=observations, extra_evidence=extra,
             parent_version=round_num - 1 if round_num > 1 else None,
@@ -216,7 +308,10 @@ def run(req: RunReq):
             "inspection": None,
         }
         chosen = decision.action_id if decision.status == "decision" else None
-        if chosen and chosen in fixture.inspections:
+        # stop once the model escalates/abstains, or would repeat an inspection
+        # it already ran (no new evidence left to reveal — avoids an infinite loop)
+        if chosen and chosen in fixture.inspections and chosen not in performed:
+            performed.add(chosen)
             obs = run_inspection(fixture, chosen)
             observations.append(obs)
             entry["inspection"] = obs.model_dump()
@@ -227,7 +322,8 @@ def run(req: RunReq):
 
     return {
         "incident": {"id": fixture.id, "title": fixture.title, "asset": fixture.asset,
-                     "description": fixture.description, "reported": fixture.reported},
+                     "description": fixture.description, "reported": fixture.reported,
+                     "impact": CUSTOM_IMPACT.get(fixture.id, "")},
         "forbidden_actions": [a.model_dump() for a in fixture.forbidden_actions],
         "rounds": rounds,
         "web_provenance": web_provenance,

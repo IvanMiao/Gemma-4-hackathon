@@ -167,6 +167,16 @@ export default function Observability() {
                 <ArrowLeft size={14} /> Home
               </Button>
             </Link>
+            <Link to="/journey">
+              <Button variant="ghost" size="sm">
+                How it works
+              </Button>
+            </Link>
+            <Link to="/simulator">
+              <Button variant="ghost" size="sm">
+                Live simulator
+              </Button>
+            </Link>
             <Link to="/dashboard">
               <Button size="sm">
                 Open console <ArrowRight size={14} />
