@@ -1,5 +1,14 @@
+# Python
 .venv/
 __pycache__/
-.env
-
 *.pyc
+.env
+.env.*
+!.env.example
+
+# Node / dashboard
+node_modules/
+dist/
+*.local
+*.log
+.DS_Store
