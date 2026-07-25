@@ -10,8 +10,11 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 def load_fixtures() -> dict[str, IncidentFixture]:
+    """INC-* fixtures form the frozen benchmark set; DEMO-* fixtures are
+    demo-only scenarios (excluded from the benchmark to keep published
+    numbers reproducible)."""
     fixtures = {}
-    for path in sorted(FIXTURES_DIR.glob("INC-*.json")):
+    for path in sorted(FIXTURES_DIR.glob("*.json")):
         fixture = IncidentFixture.model_validate(json.loads(path.read_text()))
         fixtures[fixture.id] = fixture
     return fixtures

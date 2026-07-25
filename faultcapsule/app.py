@@ -31,7 +31,7 @@ WEB_DIR = Path(__file__).parent / "web"
 serp = SerpApiProvider()
 serp_enabled = False  # user opt-in, independent from network mode
 
-ACTIVE_INCIDENT = "INC-001"
+ACTIVE_INCIDENT = "DEMO-207"  # 4-round metro crossover scenario (see PITCH.md journey)
 # per-incident inspections already performed (drives capsule recompilation)
 OBSERVATIONS: dict[str, list[InspectionOutcome]] = {}
 

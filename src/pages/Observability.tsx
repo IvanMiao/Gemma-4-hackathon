@@ -2,6 +2,7 @@ import { motion, type Variants } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, ArrowLeft, ArrowRight, Cpu, Globe, Server } from 'lucide-react'
+import { BrandMark } from '@/components/BrandMark'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import laptopRun from '../../results/laptop-ollama-gemma4-e2b.json'
@@ -157,7 +158,7 @@ export default function Observability() {
       <nav className="sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight text-fg no-underline">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-lime text-[26px] leading-none text-ink">⚙</span>
+            <BrandMark />
             Fault Capsule
           </Link>
           <div className="flex items-center gap-2.5">

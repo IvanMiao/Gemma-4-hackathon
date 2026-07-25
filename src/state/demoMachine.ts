@@ -9,11 +9,26 @@ import type {
   RunMetrics,
 } from '../types/domain'
 
+export interface DiagnosticRound {
+  round: number
+  decision: DecisionOutput
+  inspection: InspectionResult
+}
+
+/** Actions that end the diagnostic loop instead of triggering another inspection. */
+export const TERMINAL_ACTIONS = new Set(['escalate_to_human', 'insufficient_evidence', 'ACT-07'])
+export const MAX_ROUNDS = 4
+
+export function isTerminalDecision(decision: DecisionOutput, completedRounds: number): boolean {
+  return TERMINAL_ACTIONS.has(decision.actionId) || completedRounds >= MAX_ROUNDS
+}
+
 export interface DemoState {
   incident: IncidentFixture | null
   capsule: IncidentCapsule | null
   decision: DecisionOutput | null
   inspection: InspectionResult | null
+  history: DiagnosticRound[]
   metrics: RunMetrics | null
   phase: DiagnosticPhase
   networkMode: NetworkMode
@@ -46,6 +61,7 @@ export const initialDemoState: DemoState = {
   capsule: null,
   decision: null,
   inspection: null,
+  history: [],
   metrics: null,
   phase: 'idle',
   networkMode: 'off',
@@ -70,15 +86,20 @@ export function demoReducer(state: DemoState, event: DemoEvent): DemoState {
       }
     case 'INSPECTION_STARTED':
       return { ...state, phase: 'inspecting', error: null }
-    case 'INSPECTION_RECEIVED':
+    case 'INSPECTION_RECEIVED': {
+      const history = state.decision
+        ? [...state.history, { round: state.history.length + 1, decision: state.decision, inspection: event.inspection }]
+        : state.history
       return {
         ...state,
-        phase: 'resolved',
+        phase: isTerminalDecision(event.decision, history.length) ? 'resolved' : 'decision-ready',
         inspection: event.inspection,
         capsule: event.capsule,
         decision: event.decision,
+        history,
         metrics: event.metrics,
       }
+    }
     case 'NETWORK_MODE_CHANGED':
       return {
         ...state,

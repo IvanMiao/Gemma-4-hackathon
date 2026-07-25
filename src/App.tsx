@@ -353,6 +353,41 @@ export default function App() {
 
         {state.error ? <div className="error-banner" role="alert">{state.error}</div> : null}
 
+        {state.history.length > 0 ? (
+          <section className="event-section" aria-label="Diagnostic rounds log">
+            <div className="support-heading" style={{ marginBottom: '0.75rem' }}>
+              <span>DIAGNOSTIC LOG</span>
+              <h2 style={{ fontSize: '1rem', margin: 0 }}>
+                {state.history.length} inspection round{state.history.length > 1 ? 's' : ''} completed
+                {state.phase === 'resolved' ? ' · resolved' : ' · in progress'}
+              </h2>
+            </div>
+            <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.5rem' }}>
+              {state.history.map((round) => (
+                <li
+                  key={round.round}
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'baseline',
+                    gap: '0.6rem',
+                    border: '1px solid var(--line)',
+                    borderRadius: '6px',
+                    padding: '0.55rem 0.8rem',
+                    background: 'var(--surface)',
+                  }}
+                >
+                  <strong style={{ fontFamily: 'var(--font-data)', fontSize: '0.75rem', color: 'var(--cyan)' }}>
+                    R{round.round}
+                  </strong>
+                  <code style={{ fontSize: '0.75rem' }}>{round.decision.actionId}</code>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{round.inspection.finding}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
         <section className="event-section" aria-label="Incident event stream">
           <IncidentTimeline events={incident.timeline} inspection={state.inspection} />
         </section>
