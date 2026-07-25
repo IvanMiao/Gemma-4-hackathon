@@ -51,30 +51,39 @@ function SceneFallback() {
 }
 
 function GemmaTrace({ capsule, active }: { capsule: IncidentCapsule; active: boolean }) {
-  const lines = useMemo(() => {
-    const alarm = capsule.evidence.find((e) => e.kind === 'alarm')
-    return [
-      `capsule v${capsule.version} · ${capsule.evidence.length} evidence · ~${capsule.tokenBudget.used} tk`,
-      'prompting gemma-4-E2B-it · local runtime · 0 outbound',
-      alarm ? `reading alarm ${alarm.id}: ${alarm.title.slice(0, 44)}` : 'reading live signals',
-      'cross-checking maintenance × topology × safety rules',
-      `weighing ${capsule.allowedActions.length} whitelisted actions · ${capsule.forbiddenActions.length} forbidden excluded`,
-      'emitting structured decision (strict JSON)…',
-    ]
-  }, [capsule])
-  const [step, setStep] = useState(0)
+  const apiBase = import.meta.env.VITE_API_BASE_URL as string | undefined
+  const [stream, setStream] = useState('')
+  const [phase, setPhase] = useState('')
 
+  // Poll the real token stream of the in-flight local inference.
   useEffect(() => {
-    if (!active) {
-      setStep(0)
+    if (!active || !apiBase) {
+      setStream('')
       return
     }
-    setStep(1)
-    const timer = setInterval(() => setStep((s) => Math.min(s + 1, lines.length)), 850)
-    return () => clearInterval(timer)
-  }, [active, lines.length])
+    let cancelled = false
+    const poll = async () => {
+      try {
+        const res = await fetch(new URL('/api/trace', apiBase))
+        const data = (await res.json()) as { active: boolean; phase: string; text: string }
+        if (!cancelled && data.text) {
+          setStream(data.text)
+          setPhase(data.phase)
+        }
+      } catch {
+        /* backend gone: header line still shows */
+      }
+    }
+    poll()
+    const timer = setInterval(poll, 450)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [active, apiBase])
 
-  if (!active || step === 0) return null
+  if (!active) return null
+  const header = `capsule v${capsule.version} · ${capsule.evidence.length} evidence · ~${capsule.tokenBudget.used} tk · gemma-4-E2B-it local`
   return (
     <div
       aria-live="polite"
@@ -85,21 +94,27 @@ function GemmaTrace({ capsule, active }: { capsule: IncidentCapsule; active: boo
         background: 'var(--surface)',
         padding: '0.55rem 0.75rem',
         display: 'grid',
-        gap: '0.28rem',
+        gap: '0.3rem',
         fontFamily: 'var(--font-data)',
         fontSize: '0.68rem',
         color: 'var(--text-secondary)',
       }}
     >
-      {lines.slice(0, step).map((line, i) => (
-        <div key={line} style={{ display: 'flex', gap: '0.5rem', opacity: i === step - 1 ? 1 : 0.55 }}>
-          <span style={{ color: 'var(--cyan)' }}>{i === step - 1 ? '▸' : '✓'}</span>
-          <span>
-            {line}
-            {i === step - 1 && <span className="phase-indicator--analyzing" style={{ marginLeft: 2 }}>▍</span>}
-          </span>
-        </div>
-      ))}
+      <div style={{ display: 'flex', gap: '0.5rem', opacity: 0.6 }}>
+        <span style={{ color: 'var(--cyan)' }}>✓</span>
+        <span>{header}</span>
+      </div>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <span style={{ color: 'var(--cyan)' }}>▸</span>
+        <span style={{ wordBreak: 'break-word', maxHeight: '5.6em', overflow: 'hidden', display: 'block' }}>
+          {stream
+            ? `${phase === 'thinking' ? '[thinking] ' : '[model output] '}${stream.slice(-260)}`
+            : apiBase
+              ? 'waiting for first tokens from the local model…'
+              : 'demo gateway: no live token stream'}
+          <span className="phase-indicator--analyzing" style={{ marginLeft: 2 }}>▍</span>
+        </span>
+      </div>
     </div>
   )
 }

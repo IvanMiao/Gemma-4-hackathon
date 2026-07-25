@@ -4,7 +4,9 @@
 
 A deterministic, label-blind *Local Evidence Compiler* turns scattered incident data (telemetry, alarms, maintenance history, topology, manuals, safety rules) into a compact, versioned, token-budgeted **Incident Capsule**. Gemma 4 then performs constrained reasoning over the capsule: it picks the single next *safe* inspection action from a whitelist, cites its evidence, or explicitly abstains.
 
-Built in one day at the **Paris Gemma 4 Hackathon** (July 25, 2026, 42 Paris).
+Everything runs on the technician's own machine: a 4.1 GB Q4_K_M build of `gemma-4-E2B-it` under Ollama, network off by default, zero outbound requests.
+
+Built in one day at the **Paris Gemma 4 Hackathon** (July 25, 2026, 42 Paris) — track: **Edge / On-Device**.
 
 ```text
 On-site incident data
