@@ -5,9 +5,11 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from .compat import decision_to_ui, fixture_to_ui, inspection_to_ui, capsule_to_ui
 from .compiler import capsule_to_prompt, compile_incident
 from .inference import make_adapter
 from .network import GUARD
@@ -17,11 +19,21 @@ from .simulator import load_fixtures, run_inspection
 from .strategies import CONTEXT_BUILDERS
 
 app = FastAPI(title="Fault Capsule")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 FIXTURES = load_fixtures()
 WEB_DIR = Path(__file__).parent / "web"
 
 serp = SerpApiProvider()
 serp_enabled = False  # user opt-in, independent from network mode
+
+ACTIVE_INCIDENT = "INC-001"
+# per-incident inspections already performed (drives capsule recompilation)
+OBSERVATIONS: dict[str, list[InspectionOutcome]] = {}
 
 
 class NetworkReq(BaseModel):
@@ -73,6 +85,86 @@ def set_plugin(req: PluginReq):
     global serp_enabled
     serp_enabled = req.enabled and GUARD.network_on
     return {"enabled": serp_enabled, "loaded": serp_enabled and serp.is_available()}
+
+
+# --- React dashboard contract (src/types/domain.ts) ---
+
+
+class InferenceReq(BaseModel):
+    capsule: dict
+
+
+class InspectionReq(BaseModel):
+    actionId: str
+
+
+class SerpNeedReq(BaseModel):
+    reason: str
+    deviceType: str
+    publicErrorCode: str
+    approvedDomains: list[str] = []
+
+
+@app.get("/api/incidents/active")
+def active_incident():
+    fixture = FIXTURES[ACTIVE_INCIDENT]
+    OBSERVATIONS.pop(fixture.id, None)  # fresh demo run
+    return fixture_to_ui(fixture, compile_incident(fixture))
+
+
+@app.post("/api/inference")
+def inference(req: InferenceReq):
+    incident_id = req.capsule.get("incidentId", ACTIVE_INCIDENT)
+    fixture = FIXTURES.get(incident_id)
+    if not fixture:
+        raise HTTPException(404, "unknown incident")
+    observations = OBSERVATIONS.get(incident_id, [])
+    capsule = compile_incident(
+        fixture, observations=observations,
+        parent_version=len(observations) or None,
+    )
+    decision, metrics = make_adapter().infer(capsule_to_prompt(capsule))
+    return decision_to_ui(decision, capsule, metrics)
+
+
+@app.post("/api/incidents/{incident_id}/inspections")
+def inspections(incident_id: str, req: InspectionReq):
+    fixture = FIXTURES.get(incident_id)
+    if not fixture:
+        raise HTTPException(404, "unknown incident")
+    try:
+        obs = run_inspection(fixture, req.actionId)
+    except ValueError as err:
+        raise HTTPException(403, str(err))
+    observations = OBSERVATIONS.setdefault(incident_id, [])
+    observations.append(obs)
+    next_capsule = compile_incident(fixture, observations=observations, parent_version=len(observations))
+    return inspection_to_ui(obs, next_capsule, fixture.reported)
+
+
+@app.post("/api/evidence/serpapi")
+def serpapi_search(req: SerpNeedReq):
+    need = InformationNeed(
+        device_type=req.deviceType, public_error_code=req.publicErrorCode, question=req.reason,
+    )
+    if serp.is_available():
+        records = serp.search(need)
+        sent = serp.last_query["fields_sent"] if serp.last_query else []
+    else:
+        from .serpapi_plugin import offline_bulletin_fixture
+
+        records, sent = offline_bulletin_fixture(), []
+    from .compat import evidence_to_ui
+
+    fixture = FIXTURES.get(ACTIVE_INCIDENT)
+    if fixture:
+        OBSERVATIONS.setdefault(fixture.id, [])
+    return {
+        "records": [evidence_to_ui(rec) for rec in records],
+        "sentFields": sent,
+        "provider": "serpapi",
+        "retrievedAt": "2026-07-25T00:00:00Z",
+    }
 
 
 @app.post("/api/run")
