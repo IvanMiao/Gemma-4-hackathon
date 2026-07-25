@@ -10,8 +10,14 @@ export function BrandMark({ size = 36 }: { size?: number }) {
       }}
       aria-hidden="true"
     >
-      <i className="absolute h-[13%] w-[45%] -translate-y-[10%] rotate-[-32deg] rounded-full bg-lime" />
-      <i className="absolute h-[13%] w-[45%] translate-y-[10%] rotate-[-32deg] rounded-full bg-[#8f7cff]" />
+      <i
+        className="absolute h-[13%] w-[45%] rounded-full bg-lime"
+        style={{ transform: 'rotate(-32deg) translateY(-40%)' }}
+      />
+      <i
+        className="absolute h-[13%] w-[45%] rounded-full bg-[#8f7cff]"
+        style={{ transform: 'rotate(-32deg) translateY(40%)' }}
+      />
     </span>
   )
 }

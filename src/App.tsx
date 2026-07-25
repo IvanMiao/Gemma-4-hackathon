@@ -28,7 +28,7 @@ import {
 } from './features/digitalTwin/model'
 import type { TwinPartId } from './features/digitalTwin/model'
 import { useDemoController } from './hooks/useDemoController'
-import type { DiagnosticPhase } from './types/domain'
+import type { DiagnosticPhase, IncidentCapsule } from './types/domain'
 
 const PointMachineScene = lazy(() => import('./components/PointMachineScene'))
 
@@ -46,6 +46,60 @@ function SceneFallback() {
     <div className="scene-fallback" aria-label="Loading 3D asset view">
       <span />
       <strong>BUILDING LIVE TWIN</strong>
+    </div>
+  )
+}
+
+function GemmaTrace({ capsule, active }: { capsule: IncidentCapsule; active: boolean }) {
+  const lines = useMemo(() => {
+    const alarm = capsule.evidence.find((e) => e.kind === 'alarm')
+    return [
+      `capsule v${capsule.version} · ${capsule.evidence.length} evidence · ~${capsule.tokenBudget.used} tk`,
+      'prompting gemma-4-E2B-it · local runtime · 0 outbound',
+      alarm ? `reading alarm ${alarm.id}: ${alarm.title.slice(0, 44)}` : 'reading live signals',
+      'cross-checking maintenance × topology × safety rules',
+      `weighing ${capsule.allowedActions.length} whitelisted actions · ${capsule.forbiddenActions.length} forbidden excluded`,
+      'emitting structured decision (strict JSON)…',
+    ]
+  }, [capsule])
+  const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    if (!active) {
+      setStep(0)
+      return
+    }
+    setStep(1)
+    const timer = setInterval(() => setStep((s) => Math.min(s + 1, lines.length)), 850)
+    return () => clearInterval(timer)
+  }, [active, lines.length])
+
+  if (!active || step === 0) return null
+  return (
+    <div
+      aria-live="polite"
+      style={{
+        marginTop: '0.6rem',
+        border: '1px solid var(--line)',
+        borderRadius: '6px',
+        background: 'var(--surface)',
+        padding: '0.55rem 0.75rem',
+        display: 'grid',
+        gap: '0.28rem',
+        fontFamily: 'var(--font-data)',
+        fontSize: '0.68rem',
+        color: 'var(--text-secondary)',
+      }}
+    >
+      {lines.slice(0, step).map((line, i) => (
+        <div key={line} style={{ display: 'flex', gap: '0.5rem', opacity: i === step - 1 ? 1 : 0.55 }}>
+          <span style={{ color: 'var(--cyan)' }}>{i === step - 1 ? '▸' : '✓'}</span>
+          <span>
+            {line}
+            {i === step - 1 && <span className="phase-indicator--analyzing" style={{ marginLeft: 2 }}>▍</span>}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -348,6 +402,7 @@ export default function App() {
               onInspect={actions.inspect}
               onReset={actions.reset}
             />
+            <GemmaTrace capsule={state.capsule} active={state.phase === 'analyzing' || state.phase === 'inspecting'} />
           </aside>
         </section>
 
