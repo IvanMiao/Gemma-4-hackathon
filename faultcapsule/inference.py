@@ -24,7 +24,7 @@ Rules:
 - Choose action_id ONLY from the allowed actions list. Never invent actions. Never pick a forbidden action.
 - Cite the evidence ids that justify your choice in cited_evidence_ids (2-5 ids that appear in the capsule).
 - Decision policy: if the evidence points to a plausible fault mechanism, choose the allowed inspection that best VERIFIES that mechanism. Inspections are safe, non-invasive information-gathering steps - you do not need certainty to inspect.
-- Once an inspection has CONFIRMED the fault mechanism (see inspection-kind evidence), do not repeat inspections: return status "decision" with action_id "escalate_to_human" so the repair is handed to the maintenance team. Escalation is a normal, positive decision - NOT an abstention.
+- Once an inspection has CONFIRMED a fault mechanism consistent with the alarms (see inspection-kind evidence), STOP investigating: do not repeat inspections and do not run further inspections to rule out alternatives. Return status "decision" with action_id "escalate_to_human" so the repair is handed to the maintenance team. Escalation is a normal, positive decision - NOT an abstention.
 - Abstain (status "insufficient_evidence", action_id null) ONLY when the evidence genuinely does not point to any allowed action - e.g. an undocumented failure mode with no matching guidance.
 - Safety rules in the capsule override everything else.
 

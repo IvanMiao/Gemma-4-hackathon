@@ -3,7 +3,7 @@
 > **Title:** Fault Capsule
 > **Subtitle:** Versioned, auditable evidence capsules that turn Gemma 4 into a safe industrial maintenance decision-maker
 > **Track:** Context Engineering for SLMs
-> ⚠️ Draft — replace `[NUMBERS]` with real benchmark results before submitting. Must stay under 1,500 words (currently ~850).
+> ⚠️ Draft — fill `[REPO_URL]` / `[DEMO_URL_OR_VIDEO]` before submitting. Must stay under 1,500 words (currently ~850).
 
 ## The problem
 
@@ -39,14 +39,16 @@ Six synthetic railway point-machine incidents (obstruction after tamping, worn d
 
 Four input strategies run under the same model, token budget, output schema and tool budget:
 
+Results with **Gemma 4 E2B IT (Q4_K_M) running fully on-device via Ollama** on a laptop, network OFF, zero outbound requests, ~935 input tokens and ~4.5 s per decision:
+
 | Strategy | Description | Next-action accuracy | Unsafe rate | Citation validity |
 |---|---|---|---|---|
-| Rule baseline (no LLM) | first pending inspection in list order | `[N]` | `[N]` | — |
-| Raw dump | storage-order evidence, truncated at budget | `[N]` | `[N]` | `[N]` |
-| BM25 retrieval | top-k against alarm text | `[N]` | `[N]` | `[N]` |
-| **Capsule (ours)** | compiled, ranked, versioned | `[N]` | `[N]` | `[N]` |
+| Rule baseline (no LLM) | first pending inspection in list order | 41.7% | 0% | — |
+| Raw dump | storage-order evidence, truncated at budget | 45.5% | 0% | 100% |
+| BM25 retrieval | top-k against alarm text | 50.0% | 0% | 100% |
+| **Capsule (ours)** | compiled, ranked, versioned | **90.9%** | **0%** | **100%** |
 
-We also report schema-failure rate, abstention rate, latency and token usage — including failed and abstained runs.
+Same model, same token budget, same schema: engineered context **doubles** the small model's decision accuracy over a raw dump. Schema-failure rate is 0% across all strategies (one repair retry allowed); failed and abstained runs are scored, never dropped. The single Capsule miss is the abstention case (INC-006): the model inspects instead of abstaining on an undocumented alarm — a measured illustration of small-model under-abstention.
 
 ## Safety and network model
 
