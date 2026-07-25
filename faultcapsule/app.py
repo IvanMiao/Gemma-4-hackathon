@@ -55,6 +55,14 @@ def index():
     return FileResponse(WEB_DIR / "index.html")
 
 
+@app.get("/api/trace")
+def trace():
+    """Live token stream of the in-flight local inference (real model output)."""
+    from .inference import LIVE_TRACE
+
+    return LIVE_TRACE
+
+
 @app.get("/api/state")
 def state():
     adapter = make_adapter()

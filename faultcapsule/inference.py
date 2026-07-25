@@ -16,6 +16,23 @@ from .compiler import _relevance, _tokens, approx_token_count
 from .network import GUARD
 from .schemas import ActionSpec, DecisionOutput, EvidenceRecord, RunMetrics
 
+# Live token trace of the in-flight local inference (read by GET /api/trace).
+LIVE_TRACE: dict = {"seq": 0, "active": False, "phase": "", "text": ""}
+
+
+def _trace_start(phase: str) -> None:
+    LIVE_TRACE.update(seq=LIVE_TRACE["seq"] + 1, active=True, phase=phase, text="")
+
+
+def _trace_append(chunk: str) -> None:
+    LIVE_TRACE["text"] = (LIVE_TRACE["text"] + chunk)[-2000:]
+    LIVE_TRACE["seq"] += 1
+
+
+def _trace_end() -> None:
+    LIVE_TRACE.update(seq=LIVE_TRACE["seq"] + 1, active=False)
+
+
 SYSTEM_PROMPT = """You are Fault Capsule, a maintenance decision assistant for railway point machines.
 You will receive an evidence capsule and a list of allowed actions.
 Your job: pick the single next SAFE inspection action, or abstain.
@@ -129,22 +146,37 @@ class OllamaAdapter(InferenceAdapter):
     def _complete(self, messages: list[dict]) -> str:
         import httpx
 
-        resp = httpx.post(
-            f"{self.base_url}/api/chat",
-            json={
-                "model": self.model, "messages": messages, "stream": False,
-                "think": self.think,
-                "options": {"temperature": 0.1, "num_predict": 900, "num_ctx": 8192},
-            },
-            timeout=600.0,
-        )
-        resp.raise_for_status()
+        _trace_start("thinking" if self.think else "generating")
+        content = ""
+        try:
+            with httpx.stream(
+                "POST",
+                f"{self.base_url}/api/chat",
+                json={
+                    "model": self.model, "messages": messages, "stream": True,
+                    "think": self.think,
+                    "options": {"temperature": 0.1, "num_predict": 900, "num_ctx": 8192},
+                },
+                timeout=600.0,
+            ) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    part = json.loads(line).get("message", {})
+                    if thinking := part.get("thinking"):
+                        _trace_append(thinking)
+                    if chunk := part.get("content"):
+                        content += chunk
+                        _trace_append(chunk)
+        finally:
+            _trace_end()
         try:  # resident model memory, shown as peak RAM in the UI
             models = httpx.get(f"{self.base_url}/api/ps", timeout=2.0).json().get("models", [])
             self.peak_memory_gb = round(sum(m.get("size", 0) for m in models) / 1e9, 1)
         except Exception:
             pass
-        return resp.json()["message"]["content"]
+        return content
 
     @staticmethod
     def available(model: str) -> bool:
