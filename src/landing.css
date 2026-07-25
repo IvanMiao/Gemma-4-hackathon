@@ -1,0 +1,24 @@
+/* Tailwind v4 WITHOUT preflight: the dashboard keeps its own stylesheet
+   untouched; utilities and theme tokens are available everywhere. */
+@layer theme, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  /* Light landing palette (qount.io-inspired) */
+  --color-paper: #ffffff;
+  --color-paper-soft: #f5f7f8;
+  --color-ink: #0e1b22;
+  --color-ink-soft: #4d5f68;
+  --color-ink-muted: #83929a;
+  --color-accent: #0c7d74;
+  --color-accent-strong: #0a6a62;
+  --color-accent-soft: #e3f2f0;
+  --color-amber: #b97f16;
+  --color-line: #e5eaec;
+  --color-line-strong: #cfd8db;
+  /* Dashboard dark tokens (kept for shared components) */
+  --color-bg: #070a0c;
+  --color-cyan: #53d8ce;
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
