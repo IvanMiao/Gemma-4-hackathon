@@ -96,6 +96,11 @@ function HeroCollage() {
   }, [])
   const alert = ALERTS[idx]
 
+  // Fixed geometry: label row 24px + card 64px per group, 16px gaps.
+  // Card centers: y = groupTop + 24 + 32 -> 56, 160, 264. Total height 296.
+  const YS = [56, 160, 264]
+  const MID = 160
+
   return (
     <div className="relative hidden items-center gap-5 lg:flex">
       {/* Source lists */}
@@ -107,8 +112,8 @@ function HeroCollage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 + i * 0.15, duration: 0.5 }}
           >
-            <p className="mb-1.5 text-xs text-fg-muted">{s.group}</p>
-            <div className="rounded-xl border border-line bg-card px-4 py-3">
+            <p className="mb-1.5 h-[18px] text-xs text-fg-muted">{s.group}</p>
+            <div className="flex h-16 items-center rounded-xl border border-line bg-card px-4">
               <p className="text-[13px] font-medium text-fg">{s.items}</p>
             </div>
           </motion.div>
@@ -116,12 +121,17 @@ function HeroCollage() {
       </div>
 
       {/* Dashed connector + node */}
-      <div className="relative -mx-5 flex h-64 w-20 shrink-0 items-center justify-center">
-        <svg className="absolute inset-0 h-64 w-20" viewBox="0 0 80 256" fill="none" aria-hidden="true">
-          <path d="M0 40 C44 40 22 128 40 128 M0 128 H40 M0 216 C44 216 22 128 40 128 M40 128 H80" stroke="#3a3a3a" strokeWidth="1.5" strokeDasharray="3 4" />
-          {['M0 40 C44 40 22 128 40 128 L80 128', 'M0 128 H80', 'M0 216 C44 216 22 128 40 128 L80 128'].map((d, i) => (
-            <circle key={d} r="2.2" fill="#d6f242" opacity="0">
-              <animateMotion dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" path={d} />
+      <div className="relative -mx-5 h-[296px] w-20 shrink-0">
+        <svg className="absolute inset-0" width="80" height="296" viewBox="0 0 80 296" fill="none" aria-hidden="true">
+          <path
+            d={YS.map((y) => `M0 ${y} C44 ${y} 22 ${MID} 40 ${MID}`).join(' ') + ` M40 ${MID} H80`}
+            stroke="#3a3a3a"
+            strokeWidth="1.5"
+            strokeDasharray="3 4"
+          />
+          {YS.map((y, i) => (
+            <circle key={y} r="2.2" fill="#d6f242" opacity="0">
+              <animateMotion dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" path={`M0 ${y} C44 ${y} 22 ${MID} 40 ${MID} L80 ${MID}`} />
               <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" />
             </circle>
           ))}
@@ -129,7 +139,7 @@ function HeroCollage() {
         <motion.span
           animate={{ scale: [1, 1.25, 1] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          className="relative z-1 size-3 rotate-45 rounded-[3px] bg-lime shadow-[0_0_16px_rgb(214_242_66/60%)]"
+          className="absolute top-[160px] left-1/2 z-1 size-3 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-[3px] bg-lime shadow-[0_0_16px_rgb(214_242_66/60%)]"
         />
       </div>
 

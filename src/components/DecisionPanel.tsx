@@ -29,7 +29,7 @@ function ActionButton({
     return (
       <button className="primary-action" type="button" disabled>
         <LoaderCircle className="spinner" size={18} aria-hidden="true" />
-        {phase === 'analyzing' ? 'Local Gemma is reasoning' : 'Adding inspection result and reassessing'}
+        {phase === 'analyzing' ? 'Gemma is reasoning locally' : 'Reassessing with new evidence'}
       </button>
     )
   }
@@ -37,7 +37,7 @@ function ActionButton({
   if (phase === 'decision-ready') {
     return (
       <button className="primary-action" type="button" onClick={onInspect}>
-        <span>Confirm and simulate field inspection</span>
+        <span>Confirm field inspection</span>
         <ArrowRight size={18} aria-hidden="true" />
       </button>
     )
@@ -54,8 +54,8 @@ function ActionButton({
 
   return (
     <button className="primary-action" type="button" onClick={onAnalyze}>
-      <BrainCircuit size={18} aria-hidden="true" />
       Start local diagnosis
+      <ArrowRight size={18} aria-hidden="true" />
     </button>
   )
 }
@@ -74,10 +74,9 @@ export function DecisionPanel({
     <section className="panel decision-panel" aria-labelledby="decision-title" aria-busy={isLoading}>
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">GEMMA 4 · LOCAL</span>
-          <h2 id="decision-title">Next safe inspection</h2>
+          <span className="eyebrow">GEMMA 4 · ON-DEVICE</span>
+          <h2 id="decision-title">{decision ? 'Recommended inspection' : 'Awaiting analysis'}</h2>
         </div>
-        <BrainCircuit size={21} aria-hidden="true" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -85,17 +84,14 @@ export function DecisionPanel({
           <motion.div
             key={`${decision.actionId}-${phase}`}
             className="decision-content"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
           >
             <div className="confidence-row">
               <span className="action-code">{decision.actionId}</span>
-              <span className="confidence">
-                <CircleGauge size={15} aria-hidden="true" />
-                {(decision.confidence * 100).toFixed(0)}% confidence
-              </span>
+              <span className="confidence"><CircleGauge size={15} aria-hidden="true" /> {(decision.confidence * 100).toFixed(0)}% CONFIDENCE</span>
             </div>
             <h3>{decision.actionLabel}</h3>
             <p className="decision-rationale">{decision.rationale}</p>
@@ -104,27 +100,21 @@ export function DecisionPanel({
             </div>
             <div className="safety-note">
               <ShieldAlert size={17} aria-hidden="true" />
-              <p>{decision.safetyNote}</p>
+              <p><strong>Safety locked.</strong> {decision.safetyNote}</p>
             </div>
           </motion.div>
         ) : isLoading ? (
-          <motion.div
-            key="loading"
-            className="decision-loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div key="loading" className="decision-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="scan-line" />
-            <span>VALIDATING CAPSULE</span>
-            <strong>Evidence-bound reasoning in progress</strong>
-            <p>The action allowlist and citation integrity are validated locally.</p>
+            <span>READING 5 VERIFIED SIGNALS</span>
+            <strong>Reasoning on-device</strong>
+            <p>Gemma is tracing the fault without sending incident data anywhere.</p>
           </motion.div>
         ) : (
           <motion.div key="empty" className="decision-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <span className="decision-orbit"><BrainCircuit size={26} aria-hidden="true" /></span>
-            <strong>Capsule sealed and ready</strong>
-            <p>Gemma can only select the next inspection from the current allowlist.</p>
+            <strong>Establish the next safe action</strong>
+            <p>Five verified signals are ready for private, on-device analysis.</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -132,8 +122,8 @@ export function DecisionPanel({
       {metrics ? (
         <dl className="metric-strip">
           <div><dt>TTFT</dt><dd>{metrics.timeToFirstTokenMs} ms</dd></div>
-          <div><dt>LATENCY</dt><dd>{metrics.totalLatencyMs} ms</dd></div>
-          <div><dt>PEAK RAM</dt><dd>{metrics.peakMemoryGb} GB</dd></div>
+          <div><dt>LOCAL</dt><dd>{(metrics.totalLatencyMs / 1000).toFixed(1)} s</dd></div>
+          <div><dt>MEMORY</dt><dd>{metrics.peakMemoryGb} GB</dd></div>
         </dl>
       ) : null}
 

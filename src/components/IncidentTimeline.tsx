@@ -18,10 +18,10 @@ export function IncidentTimeline({ events, inspection }: IncidentTimelineProps) 
     <section className="panel timeline-panel" aria-labelledby="timeline-title">
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">EVENT STREAM</span>
-          <h2 id="timeline-title">Incident timeline</h2>
+          <span className="eyebrow">WHAT HAPPENED</span>
+          <h2 id="timeline-title">The incident in 60 seconds</h2>
         </div>
-        <span className="live-label"><i /> LIVE</span>
+        <span className="live-label"><i /> LIVE TRACE</span>
       </div>
       <ol className="timeline-list">
         {events.map((event) => {
