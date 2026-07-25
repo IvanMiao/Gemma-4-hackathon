@@ -1,4 +1,4 @@
-import { Cpu, Wifi, WifiOff } from 'lucide-react'
+import { Cpu, Menu, Wifi, WifiOff } from 'lucide-react'
 import type { NetworkMode, RunMetrics } from '../types/domain'
 
 interface StatusHeaderProps {
@@ -11,14 +11,10 @@ interface StatusHeaderProps {
 function BrandMark() {
   return (
     <div className="brand" aria-label="Fault Capsule">
-      <span className="brand-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </span>
+      <span className="brand-mark" aria-hidden="true"><i /><i /></span>
       <span className="brand-copy">
-        <strong>FAULT CAPSULE</strong>
-        <small>ON-DEVICE INCIDENT INTELLIGENCE</small>
+        <strong>FAULT<span>/</span>CAPSULE</strong>
+        <small>ON-DEVICE INCIDENT AI</small>
       </span>
     </div>
   )
@@ -35,12 +31,15 @@ export function StatusHeader({
   return (
     <header className="status-header">
       <BrandMark />
+      <nav className="header-context" aria-label="Demo context">
+        <span>INCIDENT LAB</span><i /><strong>PM-18</strong>
+      </nav>
       <div className="system-status" aria-label="System status">
         <div className="local-status">
           <Cpu size={15} aria-hidden="true" />
           <span>
-            <strong>ON-DEVICE</strong>
-            <small>{metrics?.runtime ?? 'LOCAL RUNTIME READY'}</small>
+            <strong>GEMMA 4 · LOCAL</strong>
+            <small>{metrics?.runtime ?? 'RUNTIME READY'}</small>
           </span>
         </div>
         <button
@@ -57,6 +56,9 @@ export function StatusHeader({
             <small>{outboundRequests} OUTBOUND</small>
           </span>
           <i aria-hidden="true" />
+        </button>
+        <button className="header-menu" type="button" aria-label="Open demo menu">
+          <Menu size={18} aria-hidden="true" />
         </button>
       </div>
     </header>
