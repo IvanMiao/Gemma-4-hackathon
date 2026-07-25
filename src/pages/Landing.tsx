@@ -116,9 +116,15 @@ function HeroCollage() {
       </div>
 
       {/* Dashed connector + node */}
-      <div className="relative flex h-full w-10 shrink-0 items-center justify-center">
-        <svg className="absolute h-64 w-10" viewBox="0 0 40 256" fill="none" aria-hidden="true">
-          <path d="M0 40 C24 40 16 128 40 128 M0 128 H40 M0 216 C24 216 16 128 40 128" stroke="#3a3a3a" strokeWidth="1.5" strokeDasharray="3 4" />
+      <div className="relative -mx-5 flex h-64 w-20 shrink-0 items-center justify-center">
+        <svg className="absolute inset-0 h-64 w-20" viewBox="0 0 80 256" fill="none" aria-hidden="true">
+          <path d="M0 40 C44 40 22 128 40 128 M0 128 H40 M0 216 C44 216 22 128 40 128 M40 128 H80" stroke="#3a3a3a" strokeWidth="1.5" strokeDasharray="3 4" />
+          {['M0 40 C44 40 22 128 40 128 L80 128', 'M0 128 H80', 'M0 216 C44 216 22 128 40 128 L80 128'].map((d, i) => (
+            <circle key={d} r="2.2" fill="#d6f242" opacity="0">
+              <animateMotion dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" path={d} />
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
         </svg>
         <motion.span
           animate={{ scale: [1, 1.25, 1] }}
@@ -248,7 +254,7 @@ export default function Landing() {
       <nav className="sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <span className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-lime text-lg text-ink">⚙</span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-lime text-[26px] leading-none text-ink">⚙</span>
             Fault Capsule
           </span>
           <div className="flex items-center gap-2.5">
@@ -313,6 +319,44 @@ export default function Landing() {
           <HeroCollage />
         </motion.div>
       </header>
+
+      {/* Sponsors marquee */}
+      <section className="pb-16">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center gap-7"
+        >
+          <p className="text-xs font-semibold tracking-[0.18em] text-fg-muted uppercase">Powered by</p>
+          <div className="relative w-full overflow-hidden" style={{ maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)' }}>
+            <motion.div
+              animate={{ x: ['0%', '-25%'] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+              className="flex w-max items-center gap-5 pr-5"
+            >
+              {[0, 1, 2, 3].map((copy) => (
+                <div key={copy} aria-hidden={copy > 0} className="flex items-center gap-5">
+                  {[
+                    { src: '/sponsors/gemma4.png', alt: 'Gemma 4' },
+                    { src: '/sponsors/nvidia.webp', alt: 'NVIDIA' },
+                    { src: '/sponsors/serpapi.png', alt: 'SerpApi' },
+                    { src: '/sponsors/42ai.png', alt: '42AI' },
+                  ].map((logo) => (
+                    <span key={logo.alt} className="flex h-16 shrink-0 items-center justify-center rounded-2xl bg-paper px-8">
+                      <img src={logo.src} alt={logo.alt} className="h-9 w-auto object-contain" />
+                    </span>
+                  ))}
+                  <span className="flex h-16 shrink-0 items-center rounded-2xl bg-paper px-8 text-lg font-bold tracking-tight text-ink">
+                    Paris Python &amp; ML Group
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
 
       {/* Stats band */}
       <section className="border-y border-line bg-card/40">
