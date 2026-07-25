@@ -7,13 +7,22 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error. Please try again.'
 }
 
-function createGateway(networkModeRef: React.RefObject<NetworkMode>): DiagnosticGateway {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
+interface GatewayEnvironment {
+  useDemoGateway: boolean
+  baseUrl?: string
+}
 
-  if (!baseUrl) return new DemoDiagnosticGateway()
+export function createGateway(
+  networkModeRef: React.RefObject<NetworkMode>,
+  environment: GatewayEnvironment = {
+    useDemoGateway: import.meta.env.VITE_USE_DEMO_GATEWAY === 'true',
+    baseUrl: import.meta.env.VITE_API_BASE_URL as string | undefined,
+  },
+): DiagnosticGateway {
+  if (environment.useDemoGateway) return new DemoDiagnosticGateway()
 
   return new HttpDiagnosticGateway({
-    baseUrl,
+    baseUrl: environment.baseUrl || window.location.origin,
     getNetworkMode: () => networkModeRef.current ?? 'off',
   })
 }

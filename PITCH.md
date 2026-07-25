@@ -1,4 +1,15 @@
 # Fault Capsule — 2-Minute Pitch
+--- 
+Shorter pitch
+
+One-liner: Fault Capsule turns scattered industrial incident data into a compact, auditable evidence package that helps Gemma 4 choose the next safe inspection, even offline, on device.
+
+Pain point: During equipment failures, eg. underground metro equipment failures where network is poor, engineers/ technical operators must debug the issue mostly without wifi, piece together alarms, telemetry, maintenance records, topology, manuals, and safety rules. Raw context overwhelms small models, hiding critical evidence and producing recommendations that are difficult to trust or audit.
+
+Solution: A local compiler prioritizes and compresses the relevant evidence into a versioned Incident Capsule. Gemma 4 then selects an allowlisted inspection, cites the exact supporting evidence, providing the technical operators the next inspection instruction, all supporting offline mode
+
+---
+Longer pitch
 
 *(~290 words, spoken at a natural pace ≈ 2 minutes)*
 
