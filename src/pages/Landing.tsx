@@ -326,12 +326,12 @@ export default function Landing() {
           <p className="text-xs font-semibold tracking-[0.18em] text-fg-muted uppercase">Powered by</p>
           <div className="relative w-full overflow-hidden" style={{ maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)' }}>
             <motion.div
-              animate={{ x: ['0%', '-50%'] }}
-              transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+              animate={{ x: ['0%', '-25%'] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
               className="flex w-max items-center gap-5 pr-5"
             >
-              {[0, 1].map((copy) => (
-                <div key={copy} aria-hidden={copy === 1} className="flex items-center gap-5">
+              {[0, 1, 2, 3].map((copy) => (
+                <div key={copy} aria-hidden={copy > 0} className="flex items-center gap-5">
                   {[
                     { src: '/sponsors/gemma4.png', alt: 'Gemma 4' },
                     { src: '/sponsors/nvidia.webp', alt: 'NVIDIA' },
