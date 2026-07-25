@@ -14,7 +14,7 @@ Fault Capsule fixes the context, not the model. A deterministic compiler slices 
 
 **[1:10 — The proof]**
 
-We benchmarked it honestly: same model, same token budget, four context strategies. Raw data dump: 45% correct next actions. Classic BM25 retrieval: 50%. Our Capsule: **91%** — with zero unsafe actions and 100% valid citations. Context engineering literally doubled a small model's decision quality. And the same adapter runs on an NVIDIA L40S with vLLM: identical decisions, five times faster.
+We benchmarked it honestly: same model, same token budget, four context strategies. Classic BM25 retrieval: 45% correct next actions. Raw data dump: 50%. Our Capsule: **91%** — with zero unsafe actions and 100% valid citations. Context engineering literally doubled a small model's decision quality. And the same adapter runs on an NVIDIA L40S with vLLM: identical decisions, five times faster.
 
 **[1:40 — The close]**
 

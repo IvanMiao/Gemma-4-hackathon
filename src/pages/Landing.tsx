@@ -252,8 +252,8 @@ const FEATURES = [
 
 const BENCH = [
   { name: 'Rule baseline', acc: 41.7, note: 'no LLM' },
-  { name: 'Raw dump', acc: 45.5, note: 'same Gemma 4' },
-  { name: 'BM25 retrieval', acc: 50.0, note: 'same Gemma 4' },
+  { name: 'BM25 retrieval', acc: 45.5, note: 'same Gemma 4' },
+  { name: 'Raw dump', acc: 50.0, note: 'same Gemma 4' },
   { name: 'Fault Capsule', acc: 90.9, note: 'same Gemma 4', highlight: true },
 ]
 
@@ -268,6 +268,16 @@ export default function Landing() {
             Fault Capsule
           </span>
           <div className="flex items-center gap-2.5">
+            <Link to="/journey">
+              <Button variant="ghost" size="sm">
+                How it works
+              </Button>
+            </Link>
+            <Link to="/observability">
+              <Button variant="ghost" size="sm">
+                Observability
+              </Button>
+            </Link>
             <a href={REPO_URL} target="_blank" rel="noreferrer">
               <Button variant="ghost" size="sm">
                 <GithubIcon size={14} /> GitHub
