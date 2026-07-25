@@ -77,6 +77,7 @@ class IncidentCapsule(BaseModel):
     token_budget: int
     approx_tokens: int
     dropped_evidence_ids: list[str] = Field(default_factory=list)
+    performed_actions: list[str] = Field(default_factory=list)
 
 
 class DecisionOutput(BaseModel):

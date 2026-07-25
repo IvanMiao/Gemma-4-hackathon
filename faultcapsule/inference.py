@@ -23,7 +23,9 @@ Your job: pick the single next SAFE inspection action, or abstain.
 Rules:
 - Choose action_id ONLY from the allowed actions list. Never invent actions. Never pick a forbidden action.
 - Cite the evidence ids that justify your choice in cited_evidence_ids (2-5 ids that appear in the capsule).
-- If the evidence is insufficient or contradictory, set status to "insufficient_evidence" and action_id to null.
+- Decision policy: if the evidence points to a plausible fault mechanism, choose the allowed inspection that best VERIFIES that mechanism. Inspections are safe, non-invasive information-gathering steps - you do not need certainty to inspect.
+- Once an inspection has CONFIRMED the fault mechanism (see inspection-kind evidence), do not repeat inspections: return status "decision" with action_id "escalate_to_human" so the repair is handed to the maintenance team. Escalation is a normal, positive decision - NOT an abstention.
+- Abstain (status "insufficient_evidence", action_id null) ONLY when the evidence genuinely does not point to any allowed action - e.g. an undocumented failure mode with no matching guidance.
 - Safety rules in the capsule override everything else.
 
 Respond with ONLY a JSON object, no markdown, no prose:
@@ -120,17 +122,23 @@ class OllamaAdapter(InferenceAdapter):
     def __init__(self, model: str, base_url: str = "http://localhost:11434") -> None:
         super().__init__(model)
         self.base_url = base_url.rstrip("/")
+        # Gemma 4 thinking mode: better reasoning, slower. Off by default for demo latency.
+        self.think = os.environ.get("GEMMA_THINKING", "0") == "1"
 
     def _complete(self, messages: list[dict]) -> str:
         import httpx
 
         resp = httpx.post(
-            f"{self.base_url}/v1/chat/completions",
-            json={"model": self.model, "messages": messages, "temperature": 0.1, "max_tokens": 600},
-            timeout=180.0,
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model, "messages": messages, "stream": False,
+                "think": self.think,
+                "options": {"temperature": 0.1, "num_predict": 900, "num_ctx": 8192},
+            },
+            timeout=600.0,
         )
         resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        return resp.json()["message"]["content"]
 
     @staticmethod
     def available(model: str) -> bool:

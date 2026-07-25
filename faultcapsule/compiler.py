@@ -105,6 +105,7 @@ def compile_incident(
         token_budget=token_budget,
         approx_tokens=used,
         dropped_evidence_ids=dropped,
+        performed_actions=[obs.action_id for obs in observations],
     )
 
 
@@ -125,6 +126,7 @@ def capsule_to_prompt(capsule: IncidentCapsule) -> str:
         "ALLOWED ACTIONS (choose exactly one action_id, or abstain):",
     ]
     for act in capsule.allowed_actions:
-        lines.append(f"- {act.id}: {act.label}")
+        done = " [ALREADY PERFORMED - do not repeat]" if act.id in capsule.performed_actions else ""
+        lines.append(f"- {act.id}: {act.label}{done}")
     lines += ["", capsule.forbidden_note]
     return "\n".join(lines)
