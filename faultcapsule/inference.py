@@ -72,6 +72,7 @@ class InferenceAdapter:
                     latency_ms=int((time.monotonic() - start) * 1000),
                     attempts=attempts,
                     schema_ok=True,
+                    peak_memory_gb=getattr(self, "peak_memory_gb", 0.0),
                 )
                 return decision, metrics
             except (ValueError, ValidationError, json.JSONDecodeError) as err:
@@ -138,6 +139,11 @@ class OllamaAdapter(InferenceAdapter):
             timeout=600.0,
         )
         resp.raise_for_status()
+        try:  # resident model memory, shown as peak RAM in the UI
+            models = httpx.get(f"{self.base_url}/api/ps", timeout=2.0).json().get("models", [])
+            self.peak_memory_gb = round(sum(m.get("size", 0) for m in models) / 1e9, 1)
+        except Exception:
+            pass
         return resp.json()["message"]["content"]
 
     @staticmethod
