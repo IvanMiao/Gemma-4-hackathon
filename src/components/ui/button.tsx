@@ -3,19 +3,19 @@ import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-ink text-paper shadow-sm hover:bg-accent-strong hover:shadow-md',
-        accent: 'bg-accent text-paper shadow-sm hover:bg-accent-strong hover:shadow-md',
-        secondary: 'border border-line-strong bg-paper text-ink hover:border-accent hover:text-accent',
-        ghost: 'text-ink-soft hover:text-accent',
+        default: 'bg-lime text-ink hover:bg-lime-strong hover:shadow-[0_0_24px_rgb(214_242_66/25%)]',
+        secondary: 'bg-paper text-ink hover:bg-fg',
+        outline: 'border border-line-strong bg-transparent text-fg hover:border-lime hover:text-lime',
+        ghost: 'text-fg-soft hover:text-fg',
       },
       size: {
         default: 'h-10 px-5',
         lg: 'h-12 px-7 text-base',
-        sm: 'h-8 px-4 text-xs',
+        sm: 'h-9 px-4 text-[13px]',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },
