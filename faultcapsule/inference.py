@@ -111,6 +111,39 @@ class OpenAICompatAdapter(InferenceAdapter):
             return resp.json()["choices"][0]["message"]["content"]
 
 
+class OllamaAdapter(InferenceAdapter):
+    """Local on-device inference. localhost is not outbound traffic, so this
+    backend works with Network OFF — the edge deployment path."""
+
+    provider = "ollama-local"
+
+    def __init__(self, model: str, base_url: str = "http://localhost:11434") -> None:
+        super().__init__(model)
+        self.base_url = base_url.rstrip("/")
+
+    def _complete(self, messages: list[dict]) -> str:
+        import httpx
+
+        resp = httpx.post(
+            f"{self.base_url}/v1/chat/completions",
+            json={"model": self.model, "messages": messages, "temperature": 0.1, "max_tokens": 600},
+            timeout=180.0,
+        )
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
+
+    @staticmethod
+    def available(model: str) -> bool:
+        import httpx
+
+        try:
+            resp = httpx.get("http://localhost:11434/api/tags", timeout=2.0)
+            names = [m["name"] for m in resp.json().get("models", [])]
+            return any(n == model or n.startswith(model + ":") for n in names)
+        except Exception:
+            return False
+
+
 class MockAdapter(InferenceAdapter):
     """Deterministic, label-blind heuristic. Lets the whole pipeline run with
     zero network and stands in until the real model is wired."""
@@ -147,15 +180,25 @@ class MockAdapter(InferenceAdapter):
 
 
 def make_adapter() -> InferenceAdapter:
-    """Provider selection: OpenRouter > AI Studio > mock (no key, no network)."""
+    """Provider selection. GEMMA_PROVIDER forces one of: openrouter, aistudio,
+    ollama, mock. Otherwise: OpenRouter > AI Studio > local Ollama > mock."""
     model = os.environ.get("GEMMA_MODEL", "google/gemma-4-E2B-it")
-    if key := os.environ.get("OPENROUTER_API_KEY"):
+    ollama_model = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
+    forced = os.environ.get("GEMMA_PROVIDER", "").lower()
+
+    if forced == "mock":
+        return MockAdapter()
+    if forced == "ollama":
+        return OllamaAdapter(ollama_model)
+    if (forced in ("", "openrouter")) and (key := os.environ.get("OPENROUTER_API_KEY")):
         return OpenAICompatAdapter(model, "https://openrouter.ai/api/v1", key, "openrouter")
-    if key := os.environ.get("GOOGLE_API_KEY"):
+    if (forced in ("", "aistudio")) and (key := os.environ.get("GOOGLE_API_KEY")):
         return OpenAICompatAdapter(
             model.removeprefix("google/"),
             "https://generativelanguage.googleapis.com/v1beta/openai",
             key,
             "aistudio",
         )
+    if forced == "" and OllamaAdapter.available(ollama_model):
+        return OllamaAdapter(ollama_model)
     return MockAdapter()
