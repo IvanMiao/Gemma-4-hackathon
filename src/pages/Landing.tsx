@@ -119,6 +119,12 @@ function HeroCollage() {
       <div className="relative flex h-full w-10 shrink-0 items-center justify-center">
         <svg className="absolute h-64 w-10" viewBox="0 0 40 256" fill="none" aria-hidden="true">
           <path d="M0 40 C24 40 16 128 40 128 M0 128 H40 M0 216 C24 216 16 128 40 128" stroke="#3a3a3a" strokeWidth="1.5" strokeDasharray="3 4" />
+          {['M0 40 C24 40 16 128 40 128', 'M0 128 H40', 'M0 216 C24 216 16 128 40 128'].map((d, i) => (
+            <circle key={d} r="2.2" fill="#d6f242" opacity="0">
+              <animateMotion dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" path={d} />
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin={`${i * 0.8}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
         </svg>
         <motion.span
           animate={{ scale: [1, 1.25, 1] }}
