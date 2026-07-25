@@ -314,6 +314,33 @@ export default function Landing() {
         </motion.div>
       </header>
 
+      {/* Sponsors */}
+      <section className="mx-auto max-w-5xl px-6 pb-16">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center gap-6"
+        >
+          <p className="text-xs font-semibold tracking-[0.18em] text-fg-muted uppercase">Powered by</p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {[
+              { src: '/sponsors/gemma4.png', alt: 'Gemma 4' },
+              { src: '/sponsors/nvidia.webp', alt: 'NVIDIA' },
+              { src: '/sponsors/serpapi.png', alt: 'SerpApi' },
+            ].map((logo) => (
+              <span key={logo.alt} className="flex h-16 items-center justify-center rounded-2xl bg-paper px-7 opacity-90 transition-opacity duration-300 hover:opacity-100">
+                <img src={logo.src} alt={logo.alt} className="h-9 w-auto object-contain" />
+              </span>
+            ))}
+            <span className="flex h-16 items-center rounded-2xl bg-paper px-7 text-lg font-bold tracking-tight text-ink opacity-90 transition-opacity duration-300 hover:opacity-100">
+              Paris Python &amp; ML Group
+            </span>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Stats band */}
       <section className="border-y border-line bg-card/40">
         <motion.div
