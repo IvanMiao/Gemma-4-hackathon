@@ -1,7 +1,7 @@
 import { ContactShadows, OrbitControls, RoundedBox, useCursor } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ComponentRef, RefObject } from 'react'
 import * as THREE from 'three'
 import type { TwinPartId } from '../features/digitalTwin/model'
@@ -45,12 +45,69 @@ function RailSegment({
   )
 }
 
+function SignalTrace({
+  phase,
+  reducedMotion,
+}: Pick<SceneProps, 'phase'> & { reducedMotion: boolean }) {
+  const pulseRef = useRef<THREE.Mesh>(null)
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null)
+  const curve = useMemo(
+    () => new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.34, 0.2, -1.12),
+      new THREE.Vector3(0.78, 0.25, -0.72),
+      new THREE.Vector3(1.28, 0.29, -0.38),
+      new THREE.Vector3(1.73, 0.3, -0.12),
+      new THREE.Vector3(2.08, 0.3, -0.02),
+    ]),
+    [],
+  )
+  const isResolved = phase === 'resolved'
+  const isInspecting = phase === 'inspecting'
+  const isAnalyzing = phase === 'analyzing'
+  const color = isResolved ? '#53d8ce' : isInspecting || isAnalyzing ? '#efb44f' : '#ff684e'
+
+  useFrame(({ clock }) => {
+    const pulse = pulseRef.current
+    const material = materialRef.current
+    if (!pulse || !material) return
+
+    const t = reducedMotion || isResolved
+      ? 0.98
+      : (clock.elapsedTime * (isAnalyzing ? 0.34 : 0.2)) % 1
+    pulse.position.copy(curve.getPointAt(t))
+    const shimmer = reducedMotion ? 0.8 : 0.72 + Math.sin(clock.elapsedTime * 5.2) * 0.2
+    material.emissiveIntensity = shimmer
+    pulse.scale.setScalar(isResolved ? 1.25 : 0.82 + shimmer * 0.2)
+  })
+
+  return (
+    <group>
+      <mesh>
+        <tubeGeometry args={[curve, 56, 0.026, 8, false]} />
+        <meshStandardMaterial
+          ref={materialRef}
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.8}
+          transparent
+          opacity={isResolved ? 0.72 : 0.52}
+          roughness={0.3}
+        />
+      </mesh>
+      <mesh ref={pulseRef}>
+        <sphereGeometry args={[0.07, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.96} />
+      </mesh>
+    </group>
+  )
+}
+
 function Beacon({ phase, reducedMotion }: Pick<SceneProps, 'phase'> & { reducedMotion: boolean }) {
   const lightRef = useRef<THREE.PointLight>(null)
   const ringRef = useRef<THREE.Mesh>(null)
   const isResolved = phase === 'resolved'
   const isWorking = phase === 'analyzing' || phase === 'inspecting'
-  const color = isResolved ? '#58d8a2' : isWorking ? '#efb44f' : '#ff684e'
+  const color = isResolved ? '#53d8ce' : isWorking ? '#efb44f' : '#ff684e'
 
   useFrame(({ clock }) => {
     if (reducedMotion) return
@@ -63,16 +120,16 @@ function Beacon({ phase, reducedMotion }: Pick<SceneProps, 'phase'> & { reducedM
   })
 
   return (
-    <group position={[1.32, 0.68, 0.45]}>
+    <group position={[2.08, 0.6, -0.02]}>
       <mesh castShadow>
-        <sphereGeometry args={[0.12, 20, 20]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.4} />
+        <sphereGeometry args={[0.075, 20, 20]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.7} />
       </mesh>
       <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.28, 0.018, 12, 48]} />
+        <torusGeometry args={[0.2, 0.014, 12, 48]} />
         <meshBasicMaterial color={color} transparent opacity={0.28} />
       </mesh>
-      <pointLight ref={lightRef} color={color} intensity={1.8} distance={3.5} />
+      <pointLight ref={lightRef} color={color} intensity={1.1} distance={2.5} />
     </group>
   )
 }
@@ -84,9 +141,13 @@ interface TurnoutProps extends SceneProps {
 function Turnout({ phase, selectedPart, onSelectPart, reducedMotion }: TurnoutProps) {
   const bladeRef = useRef<THREE.Group>(null)
   const motorRef = useRef<THREE.Group>(null)
+  const connectorPlugRef = useRef<THREE.Group>(null)
+  const connectorLatchRef = useRef<THREE.Group>(null)
   const [hoveredPart, setHoveredPart] = useState<TwinPartId | null>(null)
   const isResolved = phase === 'resolved'
   const isWorking = phase === 'analyzing' || phase === 'inspecting'
+  const connectorActive = selectedPart === 'x3-connector' || hoveredPart === 'x3-connector'
+  const connectorColor = isResolved ? '#53d8ce' : phase === 'inspecting' ? '#efb44f' : '#ff684e'
   useCursor(hoveredPart !== null, 'pointer', 'auto')
 
   const selectPart = (part: TwinPartId) => (event: ThreeEvent<MouseEvent>) => {
@@ -105,7 +166,7 @@ function Turnout({ phase, selectedPart, onSelectPart, reducedMotion }: TurnoutPr
   }
 
   useFrame((state, delta) => {
-    const target = isResolved ? 0.22 : 0
+    const target = 0
     if (bladeRef.current) {
       bladeRef.current.position.x = THREE.MathUtils.damp(
         bladeRef.current.position.x,
@@ -116,6 +177,22 @@ function Turnout({ phase, selectedPart, onSelectPart, reducedMotion }: TurnoutPr
     }
     if (motorRef.current && isWorking && !reducedMotion) {
       motorRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 10) * 0.008
+    }
+    if (connectorPlugRef.current) {
+      connectorPlugRef.current.position.z = THREE.MathUtils.damp(
+        connectorPlugRef.current.position.z,
+        phase === 'inspecting' || isResolved ? -0.27 : -0.2,
+        5,
+        delta,
+      )
+    }
+    if (connectorLatchRef.current) {
+      connectorLatchRef.current.rotation.x = THREE.MathUtils.damp(
+        connectorLatchRef.current.rotation.x,
+        phase === 'inspecting' || isResolved ? -0.88 : -0.48,
+        5,
+        delta,
+      )
     }
   })
 
@@ -131,6 +208,7 @@ function Turnout({ phase, selectedPart, onSelectPart, reducedMotion }: TurnoutPr
       <RailSegment position={[-0.72, 0.08, 0]} length={11.1} />
       <RailSegment position={[0.72, 0.08, 0]} length={11.1} />
       <RailSegment position={[1.48, 0.08, -2.38]} rotation={-0.24} length={5.7} />
+      <SignalTrace phase={phase} reducedMotion={reducedMotion} />
 
       <group
         ref={bladeRef}
@@ -177,30 +255,51 @@ function Turnout({ phase, selectedPart, onSelectPart, reducedMotion }: TurnoutPr
         </mesh>
         <group
           position={[0.53, 0, -0.45]}
+          scale={1.28}
           onClick={selectPart('x3-connector')}
           onPointerOver={hoverPart('x3-connector')}
           onPointerOut={leavePart('x3-connector')}
         >
-          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-            <cylinderGeometry args={[0.12, 0.12, 0.18, 18]} />
+          <RoundedBox args={[0.34, 0.25, 0.16]} radius={0.025} smoothness={2} castShadow>
+            <meshStandardMaterial color="#303a3c" metalness={0.7} roughness={0.35} />
+          </RoundedBox>
+          <mesh position={[0, 0, -0.098]}>
+            <boxGeometry args={[0.22, 0.15, 0.055]} />
             <meshStandardMaterial
-              color={isResolved ? '#58d8a2' : '#ff684e'}
-              emissive={isResolved ? '#176044' : '#8b2419'}
-              emissiveIntensity={selectedPart === 'x3-connector' || hoveredPart === 'x3-connector' ? 1.8 : 0.7}
-              metalness={0.42}
-              roughness={0.35}
+              color={connectorColor}
+              emissive={connectorColor}
+              emissiveIntensity={connectorActive ? 1.8 : 0.8}
+              metalness={0.5}
+              roughness={0.3}
             />
           </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} scale={selectedPart === 'x3-connector' ? 1.35 : 1}>
-            <torusGeometry args={[0.2, 0.018, 12, 36]} />
-            <meshBasicMaterial
-              color={isResolved ? '#58d8a2' : '#ff684e'}
-              transparent
-              opacity={selectedPart === 'x3-connector' ? 0.95 : 0.38}
-            />
+          <group ref={connectorPlugRef} position={[0, 0, -0.2]}>
+            <RoundedBox args={[0.29, 0.21, 0.18]} radius={0.025} smoothness={2} castShadow>
+              <meshStandardMaterial
+                color={connectorActive ? '#d9e6e3' : '#a5b4b2'}
+                emissive={connectorColor}
+                emissiveIntensity={connectorActive ? 0.5 : 0.14}
+                metalness={0.58}
+                roughness={0.38}
+              />
+            </RoundedBox>
+            <group ref={connectorLatchRef} position={[0, 0.13, 0.015]} rotation={[-0.48, 0, 0]}>
+              <mesh position={[0, 0.035, -0.055]} castShadow>
+                <boxGeometry args={[0.22, 0.045, 0.18]} />
+                <meshStandardMaterial color={connectorColor} emissive={connectorColor} emissiveIntensity={0.55} />
+              </mesh>
+            </group>
+            <mesh position={[0, 0, -0.24]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+              <cylinderGeometry args={[0.055, 0.07, 0.34, 16]} />
+              <meshStandardMaterial color="#263133" metalness={0.52} roughness={0.48} />
+            </mesh>
+          </group>
+          <mesh rotation={[Math.PI / 2, 0, 0]} scale={connectorActive ? 1.45 : 1.12}>
+            <torusGeometry args={[0.24, 0.018, 12, 42]} />
+            <meshBasicMaterial color={connectorColor} transparent opacity={connectorActive ? 0.96 : 0.38} />
           </mesh>
-          <mesh>
-            <sphereGeometry args={[0.29, 12, 12]} />
+          <mesh position={[0, 0, -0.12]}>
+            <sphereGeometry args={[0.38, 12, 12]} />
             <meshBasicMaterial transparent opacity={0} depthWrite={false} />
           </mesh>
         </group>
@@ -221,8 +320,8 @@ const cameraViews: Record<TwinPartId, { position: THREE.Vector3; target: THREE.V
     target: new THREE.Vector3(0.1, 0.08, -0.8),
   },
   'x3-connector': {
-    position: new THREE.Vector3(3.2, 1.65, 2.45),
-    target: new THREE.Vector3(2.05, 0.23, 0.02),
+    position: new THREE.Vector3(4.35, 2.2, 4.05),
+    target: new THREE.Vector3(2.52, 0.26, 0.02),
   },
 }
 

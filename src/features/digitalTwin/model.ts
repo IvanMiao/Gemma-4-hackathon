@@ -69,13 +69,13 @@ export function getTwinPart(id: TwinPartId): TwinPart {
 export function getTwinPartState(id: TwinPartId, phase: DiagnosticPhase): TwinPartState {
   if (id === 'x3-connector') {
     return phase === 'resolved'
-      ? { label: 'FAULT ISOLATED', tone: 'safe' }
+      ? { label: 'CAUSE CONFIRMED', tone: 'safe' }
       : { label: 'INSPECTION REQUIRED', tone: 'critical' }
   }
 
   if (id === 'switch-blade') {
     return phase === 'resolved'
-      ? { label: 'ISOLATED · POSITION UNKNOWN', tone: 'neutral' }
+      ? { label: 'POSITION UNKNOWN · ISOLATED', tone: 'neutral' }
       : { label: 'INDICATION LOST', tone: 'critical' }
   }
 
@@ -84,6 +84,6 @@ export function getTwinPartState(id: TwinPartId, phase: DiagnosticPhase): TwinPa
   }
 
   return phase === 'resolved'
-    ? { label: 'CONTAINED', tone: 'safe' }
+    ? { label: 'ISOLATED · REPAIR PENDING', tone: 'neutral' }
     : { label: 'CURRENT ANOMALY', tone: 'warning' }
 }

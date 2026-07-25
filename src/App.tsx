@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { CapsulePanel } from './components/CapsulePanel'
 import { DecisionPanel } from './components/DecisionPanel'
 import { IncidentTimeline } from './components/IncidentTimeline'
@@ -56,7 +56,7 @@ function PhaseIndicator({ phase }: { phase: ReturnType<typeof useDemoController>
     analyzing: 'Analyzing evidence locally',
     'decision-ready': 'Action ready for confirmation',
     inspecting: 'Simulating field inspection',
-    resolved: 'Incident contained',
+    resolved: 'Fault isolated · repair pending',
     error: 'Diagnosis paused',
   }[phase]
 
@@ -69,6 +69,15 @@ const partIcons = {
   'x3-connector': PlugZap,
 }
 
+const twinStageContent = {
+  idle: { label: 'ANOMALY MAP', detail: '3 SIGNALS ACTIVE', tone: 'critical' },
+  analyzing: { label: 'TRACING EVIDENCE', detail: 'LOCAL SIGNAL PATH', tone: 'warning' },
+  'decision-ready': { label: 'FAULT VECTOR LOCKED', detail: 'X3-4 PRIORITY', tone: 'critical' },
+  inspecting: { label: 'ISOLATED INSPECTION', detail: 'SIMULATION REPLAY', tone: 'warning' },
+  resolved: { label: 'CAUSE CONFIRMED', detail: 'REPAIR PENDING', tone: 'safe' },
+  error: { label: 'TWIN PAUSED', detail: 'DIAGNOSIS ERROR', tone: 'critical' },
+} as const
+
 export default function App() {
   const { state, isEnriching, actions } = useDemoController()
   const canRender3d = useMemo(supportsWebGL, [])
@@ -76,6 +85,23 @@ export default function App() {
   const incident = state.incident
   const selectedTwinPart = selectedPart ? getTwinPart(selectedPart) : null
   const selectedPartState = selectedPart ? getTwinPartState(selectedPart, state.phase) : null
+  const twinStage = twinStageContent[state.phase]
+
+  useEffect(() => {
+    if (state.phase === 'idle') {
+      setSelectedPart(null)
+      return
+    }
+
+    if (state.phase === 'analyzing') {
+      setSelectedPart('point-machine')
+      return
+    }
+
+    if (state.phase === 'decision-ready' || state.phase === 'inspecting' || state.phase === 'resolved') {
+      setSelectedPart('x3-connector')
+    }
+  }, [state.phase])
 
   if (!incident || !state.capsule) {
     return (
@@ -134,10 +160,16 @@ export default function App() {
 
           <IncidentTimeline events={incident.timeline} inspection={state.inspection} />
 
-          <section className="asset-viewport" aria-labelledby="asset-view-title">
+          <section
+            className={`asset-viewport asset-viewport--${state.phase}`}
+            aria-labelledby="asset-view-title"
+          >
             <div className="viewport-topline">
               <div><Box size={15} aria-hidden="true" /><span id="asset-view-title">ASSET DIGITAL TWIN</span></div>
-              <span>{canRender3d ? 'SELECT A PART · DRAG TO ORBIT · SCROLL TO ZOOM' : 'SELECT A PART · SCHEMATIC FALLBACK'}</span>
+              <span className={`twin-stage-chip twin-stage-chip--${twinStage.tone}`}>
+                <i />
+                <span>{twinStage.label}<small>{twinStage.detail}</small></span>
+              </span>
             </div>
             <div className="viewport-canvas">
               <svg className="track-blueprint" viewBox="0 0 800 460" aria-hidden="true">
@@ -179,14 +211,19 @@ export default function App() {
                   />
                 </Suspense>
               ) : null}
+              <div className="twin-scan-volume" aria-hidden="true" />
               {selectedPart === null ? (
                 <>
                   <div className="twin-interaction-hint">
                     <MousePointer2 size={16} aria-hidden="true" />
-                    <span>Select a highlighted component to inspect it</span>
+                    <span>
+                      {canRender3d
+                        ? 'Select a component · drag to orbit · scroll to zoom'
+                        : 'Select a component in the schematic'}
+                    </span>
                   </div>
                   <div className="reticle reticle--motor" aria-hidden="true"><i /><span>PM-18<br /><b>POINT MACHINE</b></span></div>
-                  <div className="reticle reticle--fault" aria-hidden="true"><i /><span>X3-4<br /><b>{state.phase === 'resolved' ? 'FAULT ISOLATED' : 'SIGNAL LOSS'}</b></span></div>
+                  <div className="reticle reticle--fault" aria-hidden="true"><i /><span>X3-4<br /><b>{state.phase === 'resolved' ? 'CAUSE CONFIRMED' : 'SIGNAL LOSS'}</b></span></div>
                 </>
               ) : null}
 
@@ -246,7 +283,7 @@ export default function App() {
                       >
                         {state.phase === 'resolved' ? <ShieldCheck size={15} aria-hidden="true" /> : <CircuitBoard size={15} aria-hidden="true" />}
                         {state.phase === 'decision-ready'
-                          ? 'Run isolated X3 inspection'
+                          ? 'Review and confirm inspection'
                           : state.phase === 'inspecting'
                             ? 'Inspection in progress'
                             : state.phase === 'resolved'
@@ -258,10 +295,13 @@ export default function App() {
                 ) : null}
               </AnimatePresence>
               <div className="viewport-coordinate"><Crosshair size={13} aria-hidden="true" /> SYNTHETIC SCENE · NOT TO SCALE</div>
-              <svg className="signal-wave" viewBox="0 0 280 42" role="img" aria-label="Operating current trend with a peak of 8.7 amperes">
-                <path className="signal-grid" d="M0 34H280M0 20H280M0 6H280" />
-                <path className="signal-path" d="M0 34 L42 34 L56 30 L68 6 L76 28 L94 22 L116 31 L132 25 L150 33 L280 34" />
-              </svg>
+              <div className="signal-trace" aria-label="Evidence E-102, operating current trace with a peak of 8.7 amperes">
+                <span><i /> E-102 · CURRENT TRACE</span>
+                <svg className="signal-wave" viewBox="0 0 280 42" role="img" aria-label="Operating current trend with a peak of 8.7 amperes">
+                  <path className="signal-grid" d="M0 34H280M0 20H280M0 6H280" />
+                  <path className="signal-path" d="M0 34 L42 34 L56 30 L68 6 L76 28 L94 22 L116 31 L132 25 L150 33 L280 34" />
+                </svg>
+              </div>
             </div>
             <div className="viewport-footer">
               <div><Radio size={14} aria-hidden="true" /><span>POSITION FEEDBACK</span><strong>UNKNOWN</strong></div>
