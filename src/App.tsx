@@ -1,7 +1,6 @@
 import {
   Activity,
   AlertTriangle,
-  ArrowUpRight,
   Box,
   CircuitBoard,
   Crosshair,
@@ -13,7 +12,6 @@ import {
   PlugZap,
   Radio,
   ShieldCheck,
-  Sparkles,
   X,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -80,8 +78,8 @@ function WorkflowRail({ phase }: { phase: DiagnosticPhase }) {
   return (
     <section className="workflow-rail" aria-labelledby="workflow-title">
       <div className="workflow-intro">
-        <span>LIVE WORKFLOW</span>
-        <h2 id="workflow-title">One incident. Four clear moves.</h2>
+        <span>DIAGNOSTIC PROGRESS</span>
+        <h2 id="workflow-title">Step {activeIndex + 1} of {workflowSteps.length}</h2>
       </div>
       <ol className="workflow-steps">
         <motion.i
@@ -178,13 +176,12 @@ export default function App() {
             <p>{incident.assetId} · {incident.assetType} · Throat zone A</p>
           </div>
 
-          <div className="incident-spotlight" aria-label="Current incident spotlight">
-            <span className="spotlight-icon"><Activity size={20} aria-hidden="true" /></span>
+          <div className="incident-spotlight" aria-label="Current incident status">
+            <span className="spotlight-icon"><Activity size={18} aria-hidden="true" /></span>
             <div>
-              <span>NOW</span>
+              <span>CURRENT STATUS</span>
               <strong>{currentPhase.note}</strong>
             </div>
-            <ArrowUpRight size={19} aria-hidden="true" />
           </div>
         </section>
 
@@ -342,7 +339,7 @@ export default function App() {
           </section>
 
           <aside className="decision-stage" aria-label="Current workflow decision">
-            <div className="decision-stage-label"><Sparkles size={14} aria-hidden="true" /> CURRENT MOVE</div>
+            <div className="decision-stage-label"><i aria-hidden="true" /> NEXT ACTION</div>
             <DecisionPanel
               phase={state.phase}
               decision={state.decision}

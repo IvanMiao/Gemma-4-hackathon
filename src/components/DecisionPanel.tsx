@@ -54,7 +54,6 @@ function ActionButton({
 
   return (
     <button className="primary-action" type="button" onClick={onAnalyze}>
-      <BrainCircuit size={18} aria-hidden="true" />
       Start local diagnosis
       <ArrowRight size={18} aria-hidden="true" />
     </button>
@@ -76,9 +75,8 @@ export function DecisionPanel({
       <div className="panel-heading">
         <div>
           <span className="eyebrow">GEMMA 4 · ON-DEVICE</span>
-          <h2 id="decision-title">{decision ? 'Recommended move' : 'Ready when you are'}</h2>
+          <h2 id="decision-title">{decision ? 'Recommended inspection' : 'Awaiting analysis'}</h2>
         </div>
-        <span className="decision-ai-mark"><BrainCircuit size={21} aria-hidden="true" /></span>
       </div>
 
       <AnimatePresence mode="wait">
@@ -115,8 +113,8 @@ export function DecisionPanel({
         ) : (
           <motion.div key="empty" className="decision-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <span className="decision-orbit"><BrainCircuit size={26} aria-hidden="true" /></span>
-            <strong>Find the next safe move</strong>
-            <p>Five verified signals are ready for a private, on-device diagnosis.</p>
+            <strong>Establish the next safe action</strong>
+            <p>Five verified signals are ready for private, on-device analysis.</p>
           </motion.div>
         )}
       </AnimatePresence>
