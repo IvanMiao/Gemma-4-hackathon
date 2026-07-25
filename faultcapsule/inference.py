@@ -198,6 +198,8 @@ def make_adapter() -> InferenceAdapter:
         return MockAdapter()
     if forced == "ollama":
         return OllamaAdapter(ollama_model)
+    if base_url := os.environ.get("OPENAI_BASE_URL"):  # e.g. vLLM on an NVIDIA GPU
+        return OpenAICompatAdapter(model, base_url, os.environ.get("OPENAI_API_KEY", "EMPTY"), "vllm-nvidia")
     if (forced in ("", "openrouter")) and (key := os.environ.get("OPENROUTER_API_KEY")):
         return OpenAICompatAdapter(model, "https://openrouter.ai/api/v1", key, "openrouter")
     if (forced in ("", "aistudio")) and (key := os.environ.get("GOOGLE_API_KEY")):
