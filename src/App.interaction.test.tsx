@@ -32,16 +32,16 @@ describe('digital twin component interaction', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start local diagnosis' }))
 
     await waitFor(
-      () => expect(screen.getByRole('button', { name: 'Run isolated X3 inspection' })).toBeEnabled(),
+      () => expect(screen.getByRole('button', { name: 'Review and confirm inspection' })).toBeEnabled(),
       { timeout: 3_000 },
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Run isolated X3 inspection' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review and confirm inspection' }))
 
     await waitFor(
       () => expect(screen.getByRole('button', { name: 'Inspection captured in E-201' })).toBeDisabled(),
       { timeout: 5_000 },
     )
-    expect(screen.getAllByText('FAULT ISOLATED').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('CAUSE CONFIRMED').length).toBeGreaterThan(0)
   }, 8_000)
 })

@@ -16,10 +16,10 @@ describe('digital twin interaction model', () => {
     expect(connector?.evidenceIds).toContain('E-103')
   })
 
-  it('changes the X3 connector from suspect to isolated after round two', () => {
+  it('changes the X3 connector from suspect to confirmed after round two', () => {
     expect(getTwinPartState('x3-connector', 'decision-ready').tone).toBe('critical')
     expect(getTwinPartState('x3-connector', 'resolved')).toEqual({
-      label: 'FAULT ISOLATED',
+      label: 'CAUSE CONFIRMED',
       tone: 'safe',
     })
   })
