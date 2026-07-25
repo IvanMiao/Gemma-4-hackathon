@@ -12,6 +12,7 @@ import {
   Sparkles,
   WifiOff,
 } from 'lucide-react'
+import { BrandMark } from '@/components/BrandMark'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -252,8 +253,8 @@ const FEATURES = [
 
 const BENCH = [
   { name: 'Rule baseline', acc: 41.7, note: 'no LLM' },
-  { name: 'Raw dump', acc: 45.5, note: 'same Gemma 4' },
-  { name: 'BM25 retrieval', acc: 50.0, note: 'same Gemma 4' },
+  { name: 'BM25 retrieval', acc: 45.5, note: 'same Gemma 4' },
+  { name: 'Raw dump', acc: 50.0, note: 'same Gemma 4' },
   { name: 'Fault Capsule', acc: 90.9, note: 'same Gemma 4', highlight: true },
 ]
 
@@ -264,10 +265,20 @@ export default function Landing() {
       <nav className="sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <span className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-lime text-[26px] leading-none text-ink">⚙</span>
+            <BrandMark />
             Fault Capsule
           </span>
           <div className="flex items-center gap-2.5">
+            <Link to="/journey">
+              <Button variant="ghost" size="sm">
+                How it works
+              </Button>
+            </Link>
+            <Link to="/observability">
+              <Button variant="ghost" size="sm">
+                Observability
+              </Button>
+            </Link>
             <a href={REPO_URL} target="_blank" rel="noreferrer">
               <Button variant="ghost" size="sm">
                 <GithubIcon size={14} /> GitHub

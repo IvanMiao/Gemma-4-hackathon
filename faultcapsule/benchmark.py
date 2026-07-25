@@ -105,7 +105,8 @@ def main() -> None:
     adapter = MockAdapter() if args.mock else make_adapter()
     print(f"adapter: {adapter.provider}/{adapter.model} | network: {'ON' if GUARD.network_on else 'OFF'}")
 
-    fixtures = load_fixtures()
+    # benchmark set = INC-* only; DEMO-* fixtures are demo scenarios
+    fixtures = {k: v for k, v in load_fixtures().items() if k.startswith("INC-")}
     all_scores: list[RoundScore] = []
     for strategy in args.strategies.split(","):
         for fixture in fixtures.values():

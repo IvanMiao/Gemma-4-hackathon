@@ -1,0 +1,41 @@
+{
+  "id": "DEMO-207",
+  "title": "Point machine unresponsive at terminus crossover before service",
+  "asset": "Point machine PM-207, terminus crossover X1 (metro)",
+  "reported": "2026-07-25T05:42:00Z",
+  "description": "PM-207 fails to move Normal to Reverse during pre-service ramp-up. The interlocking drops the turnback route; first trains of the day cannot reverse. No obstruction alarm, no works overnight.",
+  "evidence": [
+    {"id": "E1", "kind": "alarm", "summary": "SW-NORESP-01: no movement detected after Normal->Reverse command at 05:41:12, command retried once by interlocking, route dropped", "source": "Interlocking event log", "timestamp": "2026-07-25T05:41:12Z"},
+    {"id": "E2", "kind": "telemetry", "summary": "No throw-complete event and no obstruction/overcurrent alarm raised; position indication stuck at Normal", "source": "SCADA point-machine telemetry", "timestamp": "2026-07-25T05:41:20Z"},
+    {"id": "E3", "kind": "maintenance", "summary": "Last preventive maintenance on PM-207 12 days ago (WO-7688), no anomaly; no works in the crossover area overnight", "source": "CMMS work order history", "timestamp": "2026-07-13T02:00:00Z"},
+    {"id": "E4", "kind": "topology", "summary": "PM-208 (same crossover, same substation feed) threw normally at 05:40; control cable of PM-207 routes via junction boxes JB-3 and JB-4, JB-4 located in a drainage sump area", "source": "Asset topology", "timestamp": "2026-07-25T05:41:00Z"},
+    {"id": "E5", "kind": "manual", "summary": "Vendor manual 7.2.4: SW-NORESP-01 without obstruction alarm - first distinguish a stalled motor from an unpowered one via the motor current trace, then split the control chain at the controller output", "source": "PM-200 series maintenance manual rev C", "timestamp": null, "trust": "vendor"},
+    {"id": "E6", "kind": "safety_rule", "summary": "SR-12: never command repeated throws when the failure mode is unknown", "source": "Site safety rulebook", "timestamp": null},
+    {"id": "E7", "kind": "safety_rule", "summary": "SR-31: junction boxes in sump areas require the worksite to be made safe before opening; do not re-energize before insulation test passes", "source": "Site safety rulebook", "timestamp": null},
+    {"id": "E8", "kind": "telemetry", "summary": "Substation feed voltage nominal 110 V at 05:41; PM-208 draw normal on the same feed", "source": "Power SCADA", "timestamp": "2026-07-25T05:41:30Z"},
+    {"id": "E9", "kind": "maintenance", "summary": "Heavy rainfall recorded on the line during the past 48 h; drainage team flagged sump levels above seasonal average", "source": "Site works log", "timestamp": "2026-07-24T22:00:00Z"}
+  ],
+  "allowed_actions": [
+    {"id": "inspect_motor_current_trace", "label": "Pull the motor current trace for the failed command window"},
+    {"id": "inspect_command_relay_output", "label": "Test command relay pick-up and voltage at controller output terminals"},
+    {"id": "inspect_junction_box_jb4", "label": "Open and inspect junction box JB-4 (sump area, make safe first)"},
+    {"id": "inspect_blade_area", "label": "Visual inspection of blade and slide chairs for obstruction"},
+    {"id": "escalate_to_human", "label": "Stop and hand over to maintenance with the evidence chain", "kind": "escalate"}
+  ],
+  "forbidden_actions": [
+    {"id": "force_repeated_throw", "label": "Command repeated throw attempts"},
+    {"id": "reset_controller_blind", "label": "Reset the point controller without a located fault"}
+  ],
+  "inspections": {
+    "inspect_motor_current_trace": {"action_id": "inspect_motor_current_trace", "summary": "No current at all during the command window - a stall would show a spike. The motor never received power; mechanical obstruction eliminated.", "new_evidence": [{"id": "E201", "kind": "inspection", "summary": "Current trace flat at 0 A across the whole command window; motor unpowered, not stalled - fault is electrical/control-side", "source": "Inspection: motor current trace", "timestamp": "2026-07-25T05:52:00Z"}]},
+    "inspect_command_relay_output": {"action_id": "inspect_command_relay_output", "summary": "Command relay picks up correctly; 110 V present at controller output terminals. Controller and upstream logic cleared.", "new_evidence": [{"id": "E202", "kind": "inspection", "summary": "Relay pick-up confirmed, 110 V measured at controller output; fault localized between controller output and machine terminals (cable run via JB-3/JB-4)", "source": "Inspection: command relay and controller output", "timestamp": "2026-07-25T06:42:00Z"}]},
+    "inspect_junction_box_jb4": {"action_id": "inspect_junction_box_jb4", "summary": "Water ingress in JB-4, corroded terminal block, intermittent open circuit reproduced by light pressure on the terminals.", "new_evidence": [{"id": "E203", "kind": "inspection", "summary": "JB-4: water ingress, corroded terminal block, open circuit reproduced; consistent with 48 h rainfall and sump exposure - root cause confirmed", "source": "Inspection: junction box JB-4", "timestamp": "2026-07-25T07:42:00Z"}]},
+    "inspect_blade_area": {"action_id": "inspect_blade_area", "summary": "Blades and slide chairs clear, no obstruction visible", "new_evidence": [{"id": "E204", "kind": "inspection", "summary": "Blade area clear, no obstruction; consistent with the absence of overcurrent", "source": "Inspection: blade area", "timestamp": "2026-07-25T05:55:00Z"}]}
+  },
+  "labels": {
+    "root_cause": "Water ingress in junction box JB-4 corroding the terminal block, opening the motor supply circuit after heavy rainfall",
+    "expected_action_round1": "inspect_motor_current_trace",
+    "expected_action_round2": "inspect_command_relay_output",
+    "unsafe_actions": ["force_repeated_throw", "reset_controller_blind"]
+  }
+}

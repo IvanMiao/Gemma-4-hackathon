@@ -44,8 +44,8 @@ Results with **Gemma 4 E2B IT (Q4_K_M) running fully on-device via Ollama** on a
 | Strategy | Description | Next-action accuracy | Unsafe rate | Citation validity |
 |---|---|---|---|---|
 | Rule baseline (no LLM) | first pending inspection in list order | 41.7% | 0% | — |
-| Raw dump | storage-order evidence, truncated at budget | 45.5% | 0% | 100% |
-| BM25 retrieval | top-k against alarm text | 50.0% | 0% | 100% |
+| BM25 retrieval | top-k against alarm text | 45.5% | 0% | 100% |
+| Raw dump | storage-order evidence, truncated at budget | 50.0% | 0% | 100% |
 | **Capsule (ours)** | compiled, ranked, versioned | **90.9%** | **0%** | **100%** |
 
 Same model, same token budget, same schema: engineered context **doubles** the small model's decision accuracy over a raw dump. Schema-failure rate is 0% across all strategies (one repair retry allowed); failed and abstained runs are scored, never dropped. The single Capsule miss is the abstention case (INC-006): the model inspects instead of abstaining on an undocumented alarm — a measured illustration of small-model under-abstention.

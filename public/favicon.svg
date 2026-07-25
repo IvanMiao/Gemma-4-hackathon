@@ -1,4 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#d6f242"/>
-  <text x="32" y="42" font-size="34" text-anchor="middle" fill="#161616" font-family="-apple-system, sans-serif">⚙</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b9ff5c" stop-opacity="0.17"/>
+      <stop offset="1" stop-color="#8f7cff" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#141414"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#bg)" stroke="#b9ff5c" stroke-opacity="0.45" stroke-width="2"/>
+  <rect x="17" y="28" width="30" height="8" rx="4" fill="#d6f242"
+        style="transform-origin:32px 32px; transform: rotate(-32deg) translateY(-6px);"/>
+  <rect x="17" y="28" width="30" height="8" rx="4" fill="#8f7cff"
+        style="transform-origin:32px 32px; transform: rotate(-32deg) translateY(6px);"/>
 </svg>
