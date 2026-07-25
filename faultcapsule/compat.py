@@ -115,7 +115,7 @@ def decision_to_ui(decision: DecisionOutput, capsule: IncidentCapsule, metrics: 
             "device": "local",
             "timeToFirstTokenMs": metrics.latency_ms,
             "totalLatencyMs": metrics.latency_ms,
-            "peakMemoryGb": 0.0,
+            "peakMemoryGb": metrics.peak_memory_gb,
             "inputTokens": metrics.input_tokens,
             "outputTokens": metrics.output_tokens,
         },

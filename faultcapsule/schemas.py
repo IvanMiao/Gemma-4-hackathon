@@ -97,6 +97,7 @@ class RunMetrics(BaseModel):
     latency_ms: int = 0
     attempts: int = 1
     schema_ok: bool = True
+    peak_memory_gb: float = 0.0
 
 
 class RoundScore(BaseModel):
