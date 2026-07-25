@@ -105,7 +105,8 @@ def decision_to_ui(decision: DecisionOutput, capsule: IncidentCapsule, metrics: 
             "confidence": decision.confidence,
             "rationale": decision.rationale,
             "citedEvidenceIds": decision.cited_evidence_ids,
-            "safetyNote": capsule.forbidden_note,
+            "safetyNote": "Forbidden actions excluded from this decision: "
+            + capsule.forbidden_note.removeprefix("FORBIDDEN (never select, never suggest): "),
         },
         "metrics": {
             "runtime": metrics.provider,
