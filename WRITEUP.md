@@ -50,6 +50,8 @@ Results with **Gemma 4 E2B IT (Q4_K_M) running fully on-device via Ollama** on a
 
 Same model, same token budget, same schema: engineered context **doubles** the small model's decision accuracy over a raw dump. Schema-failure rate is 0% across all strategies (one repair retry allowed); failed and abstained runs are scored, never dropped. The single Capsule miss is the abstention case (INC-006): the model inspects instead of abstaining on an undocumented alarm — a measured illustration of small-model under-abstention.
 
+**NVIDIA deployment.** The identical benchmark also runs against Gemma 4 E2B IT served by **vLLM 0.26 on an NVIDIA L40S**, swapped in through the same adapter (`OPENAI_BASE_URL`). The strategy ranking is preserved (Capsule 83.3% > raw 58.3% > BM25 50%) while mean decision latency drops from ~4.5 s on the laptop to **~950 ms — a 4.7× speedup** — showing the same auditable pipeline scaling from a field laptop to GPU-served fleet operation. Both raw result files are in `results/`.
+
 ## Safety and network model
 
 Startup default is **Network OFF**, enforced at the transport boundary with a live outbound-request counter (a configured API key cannot bypass it). The optional **SerpAPI add-on** loads only when the network is ON, the user opts in, and a key exists. A deterministic router sends *minimized* queries only (device type + public error code — never telemetry, work orders or site identifiers); results come back trust-classed `public`, injection-filtered, and marked `UNTRUSTED PUBLIC SOURCE` inside the next capsule version. Incident 6 demonstrates the full arc: Gemma abstains on an undocumented alarm code, external vendor-bulletin evidence arrives, and the same model then makes a confident, cited decision.
