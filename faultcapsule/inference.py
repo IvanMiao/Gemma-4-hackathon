@@ -7,7 +7,10 @@ import os
 import re
 import time
 
+from dotenv import load_dotenv
 from pydantic import ValidationError
+
+load_dotenv()
 
 from .compiler import _relevance, _tokens, approx_token_count
 from .network import GUARD
@@ -119,10 +122,14 @@ class MockAdapter(InferenceAdapter):
 
     def _pick(self, context: str) -> DecisionOutput:
         # Parse evidence lines and action lines back out of the context block.
-        evidence = re.findall(r"^- (E\d+) \((\w+),.*?\): (.+)$", context, re.MULTILINE)
+        evidence = re.findall(r"^- ([EW]\d+) \((\w+), \w+\)(?: \[[^\]]*\])?: (.+)$", context, re.MULTILINE)
         actions = re.findall(r"^- ([a-z0-9_]+): (.+)$", context, re.MULTILINE)
         signal = " ".join(s for _, kind, s in evidence if kind in ("alarm", "inspection", "telemetry", "manual"))
         anchor = _tokens(signal)
+        # After an inspection produced findings, the safe next step is handover.
+        if any(kind == "inspection" for _, kind, _ in evidence):
+            cited = [eid for eid, kind, _ in evidence if kind in ("inspection", "safety_rule")][:3]
+            return DecisionOutput(status="decision", action_id="escalate_to_human", rationale="Mock heuristic: inspection findings present, hand over to maintenance.", cited_evidence_ids=cited, confidence=0.6)
         best, best_score = None, -1
         for action_id, label in actions:
             if action_id == "escalate_to_human":
