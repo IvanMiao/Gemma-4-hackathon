@@ -1,5 +1,6 @@
 import { Ban, Database, FileCheck2, Link2, LockKeyhole } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import type { IncidentCapsule } from '../types/domain'
 
 interface CapsulePanelProps {
@@ -28,6 +29,26 @@ export function CapsulePanel({ capsule }: CapsulePanelProps) {
   const activeEvidence = capsule.evidence.find((record) => record.id === activeId)
   const budgetPercent = Math.round((capsule.tokenBudget.used / capsule.tokenBudget.maximum) * 100)
 
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+
+    event.preventDefault()
+    const lastIndex = capsule.evidence.length - 1
+    const nextIndex = event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? lastIndex
+        : event.key === 'ArrowRight'
+          ? (currentIndex + 1) % capsule.evidence.length
+          : (currentIndex - 1 + capsule.evidence.length) % capsule.evidence.length
+    const nextRecord = capsule.evidence[nextIndex]
+
+    if (nextRecord) {
+      setActiveId(nextRecord.id)
+      document.getElementById(`evidence-tab-${nextRecord.id}`)?.focus()
+    }
+  }
+
   return (
     <section className="panel capsule-panel" aria-labelledby="capsule-title">
       <div className="panel-heading capsule-heading">
@@ -45,14 +66,18 @@ export function CapsulePanel({ capsule }: CapsulePanelProps) {
       <p className="capsule-summary">{capsule.summary}</p>
 
       <div className="evidence-tabs" role="tablist" aria-label="Capsule evidence">
-        {capsule.evidence.map((record) => (
+        {capsule.evidence.map((record, index) => (
           <button
             key={record.id}
+            id={`evidence-tab-${record.id}`}
             type="button"
             role="tab"
             aria-selected={record.id === activeId}
+            aria-controls={`evidence-panel-${record.id}`}
+            tabIndex={record.id === activeId ? 0 : -1}
             className={record.id === activeId ? 'evidence-tab evidence-tab--active' : 'evidence-tab'}
             onClick={() => setActiveId(record.id)}
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
           >
             <span>{record.id}</span>
             <strong>{evidenceLabels[record.kind]}</strong>
@@ -61,7 +86,13 @@ export function CapsulePanel({ capsule }: CapsulePanelProps) {
       </div>
 
       {activeEvidence ? (
-        <article className="evidence-detail" role="tabpanel">
+        <article
+          id={`evidence-panel-${activeEvidence.id}`}
+          className="evidence-detail"
+          role="tabpanel"
+          aria-labelledby={`evidence-tab-${activeEvidence.id}`}
+          tabIndex={0}
+        >
           <span className="evidence-detail-icon"><Database size={18} aria-hidden="true" /></span>
           <div>
             <div className="evidence-title-row">

@@ -1,9 +1,8 @@
-import { Cpu, PlugZap, ShieldCheck, Wifi, WifiOff } from 'lucide-react'
+import { Cpu, Wifi, WifiOff } from 'lucide-react'
 import type { NetworkMode, RunMetrics } from '../types/domain'
 
 interface StatusHeaderProps {
   networkMode: NetworkMode
-  pluginEnabled: boolean
   outboundRequests: number
   metrics: RunMetrics | null
   onNetworkModeChange: (mode: NetworkMode) => void
@@ -27,7 +26,6 @@ function BrandMark() {
 
 export function StatusHeader({
   networkMode,
-  pluginEnabled,
   outboundRequests,
   metrics,
   onNetworkModeChange,
@@ -38,21 +36,13 @@ export function StatusHeader({
     <header className="status-header">
       <BrandMark />
       <div className="system-status" aria-label="System status">
-        <div className="status-pill status-pill--safe">
-          <ShieldCheck size={15} aria-hidden="true" />
-          <span>ON-DEVICE</span>
-        </div>
-        <div className="status-pill status-pill--neutral status-runtime">
+        <div className="local-status">
           <Cpu size={15} aria-hidden="true" />
-          <span>{metrics?.runtime ?? 'LOCAL RUNTIME'}</span>
+          <span>
+            <strong>ON-DEVICE</strong>
+            <small>{metrics?.runtime ?? 'LOCAL RUNTIME READY'}</small>
+          </span>
         </div>
-        <div className="status-pill status-pill--neutral status-plugin">
-          <PlugZap size={15} aria-hidden="true" />
-          <span>SERPAPI {pluginEnabled ? 'READY' : 'UNLOADED'}</span>
-        </div>
-        <span className="outbound-count" title="Outbound requests in this session">
-          OUTBOUND <strong>{outboundRequests}</strong>
-        </span>
         <button
           className={`network-toggle ${isOnline ? 'network-toggle--on' : ''}`}
           type="button"
@@ -62,7 +52,10 @@ export function StatusHeader({
           onClick={() => onNetworkModeChange(isOnline ? 'off' : 'on')}
         >
           {isOnline ? <Wifi size={16} aria-hidden="true" /> : <WifiOff size={16} aria-hidden="true" />}
-          <span>NETWORK {isOnline ? 'ON' : 'OFF'}</span>
+          <span className="network-toggle-copy">
+            <strong>NETWORK {isOnline ? 'ON' : 'OFF'}</strong>
+            <small>{outboundRequests} OUTBOUND</small>
+          </span>
           <i aria-hidden="true" />
         </button>
       </div>

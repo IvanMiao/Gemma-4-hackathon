@@ -52,15 +52,15 @@ function SceneFallback() {
 
 function PhaseIndicator({ phase }: { phase: ReturnType<typeof useDemoController>['state']['phase'] }) {
   const content = {
-    idle: ['CRITICAL', 'Awaiting local diagnosis'],
-    analyzing: ['PROCESSING', 'Evidence-bound reasoning'],
-    'decision-ready': ['ACTION READY', 'Awaiting human confirmation'],
-    inspecting: ['INSPECTING', 'Simulating field inspection'],
-    resolved: ['CONTAINED', 'Isolation maintained'],
-    error: ['ERROR', 'Diagnosis paused'],
+    idle: 'Awaiting local diagnosis',
+    analyzing: 'Analyzing evidence locally',
+    'decision-ready': 'Action ready for confirmation',
+    inspecting: 'Simulating field inspection',
+    resolved: 'Incident contained',
+    error: 'Diagnosis paused',
   }[phase]
 
-  return <span className={`phase-indicator phase-indicator--${phase}`}><i /> {content[0]} · {content[1]}</span>
+  return <span className={`phase-indicator phase-indicator--${phase}`}><i /> {content}</span>
 }
 
 const partIcons = {
@@ -91,7 +91,6 @@ export default function App() {
     <div className="app-shell">
       <StatusHeader
         networkMode={state.networkMode}
-        pluginEnabled={state.pluginEnabled}
         outboundRequests={state.outboundRequests}
         metrics={state.metrics}
         onNetworkModeChange={actions.setNetworkMode}
@@ -109,10 +108,12 @@ export default function App() {
             <div className="incident-kicker">
               <span className="severity-badge"><AlertTriangle size={14} aria-hidden="true" /> SEV-1</span>
               <PhaseIndicator phase={state.phase} />
-              <span className="synthetic-badge">SYNTHETIC INCIDENT</span>
             </div>
             <h1 id="incident-title">{incident.headline}</h1>
-            <p>{incident.assetId} · {incident.assetType} · {incident.location}</p>
+            <p>
+              {incident.assetId} · {incident.assetType} · {incident.location}
+              <span className="incident-data-label">SIMULATED DATA</span>
+            </p>
           </div>
           <div className="incident-meta" aria-label="Incident summary metrics">
             <div><Activity size={17} aria-hidden="true" /><span>Current peak</span><strong>8.7 A</strong><small>+42% vs P95</small></div>
@@ -122,6 +123,15 @@ export default function App() {
         </section>
 
         <section className="hero-grid" aria-label="Incident diagnosis console">
+          <DecisionPanel
+            phase={state.phase}
+            decision={state.decision}
+            metrics={state.metrics}
+            onAnalyze={actions.analyze}
+            onInspect={actions.inspect}
+            onReset={actions.reset}
+          />
+
           <IncidentTimeline events={incident.timeline} inspection={state.inspection} />
 
           <section className="asset-viewport" aria-labelledby="asset-view-title">
@@ -260,14 +270,6 @@ export default function App() {
             </div>
           </section>
 
-          <DecisionPanel
-            phase={state.phase}
-            decision={state.decision}
-            metrics={state.metrics}
-            onAnalyze={actions.analyze}
-            onInspect={actions.inspect}
-            onReset={actions.reset}
-          />
         </section>
 
         {state.error ? <div className="error-banner" role="alert">{state.error}</div> : null}
